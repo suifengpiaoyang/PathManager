@@ -23,6 +23,9 @@ class JsonDb(dict):
             data = json.load(fl)
         return cls(data)
 
+    def pretty_print(self):
+        print(json.dumps(self, indent=4, ensure_ascii=False))
+
     def save(self, file):
         with open(file, 'w', encoding='utf-8')as fl:
             json.dump(self, fl, indent=4, ensure_ascii=False)
@@ -63,17 +66,20 @@ class MainWindow:
         """
         row_count = self.ui.listWidget.count()
         self.ui.listWidget.addItem('未命名')
+        self._clear_widgets()
         self.ui.lineEditName.setFocus()
         self.ui.listWidget.setCurrentRow(row_count)
-        self.ui.lineEditName.clear()
-        self.ui.textEditPath.clear()
-        self.ui.textEditComment.clear()
 
     def delete_item(self):
-        row_index = self.ui.listWidget.currentRow()
-        self.ui.listWidget.takeItem(row_index)
-        self.data['dataList'].pop(row_index)
-        self.data['totalCount'] = len(self.data['dataList'])
+        current_row = self.ui.listWidget.currentRow()
+        # handle datas
+        self.ui.listWidget.takeItem(current_row)
+        self.data['dataList'].pop(current_row)
+        self.data['totalCount'] -= 1
+        # gui show
+        self._clear_widgets()
+        current_row = self.ui.listWidget.currentRow()
+        self._show_row_data(current_row)
 
     def double_click_event(self):
         current_index = self.ui.listWidget.currentRow()
@@ -91,13 +97,13 @@ class MainWindow:
 
         # 编辑过的保存
         # 第一种情况，保存当前选中的选项信息
-        row_index = self.ui.listWidget.currentRow()
-        name = self.ui.lineEditName.text()
-        path = self.ui.textEditPath.toPlainText()
-        comment = self.ui.textEditComment.toPlainText()
-        self.data['dataList'][row_index]['name'] = name
-        self.data['dataList'][row_index]['path'] = path
-        self.data['dataList'][row_index]['comment'] = comment
+        # row_index = self.ui.listWidget.currentRow()
+        # name = self.ui.lineEditName.text()
+        # path = self.ui.textEditPath.toPlainText()
+        # comment = self.ui.textEditComment.toPlainText()
+        # self.data['dataList'][row_index]['name'] = name
+        # self.data['dataList'][row_index]['path'] = path
+        # self.data['dataList'][row_index]['comment'] = comment
         # from pprint import pprint
         # pprint(self.data)
         # 第二种情况，修改很多项信息
@@ -114,24 +120,40 @@ class MainWindow:
 
     def left_click_event(self):
 
-        current_index = self.ui.listWidget.currentRow()
+        current_row = self.ui.listWidget.currentRow()
 
         # 检测有没有数据发生更改
 
-
         # 当前数据显示
-        if current_index >= self.data['totalCount']:
-            current_data = {}
+        self._show_row_data(current_row)
+
+    def _get_row_data(self, row):
+        """Get one row data from self.data.
+        """
+        if row >= 0 and row <= self.data['totalCount']:
+            current_data = self.data['dataList'][row]
         else:
-            current_data = self.data['dataList'][current_index]
+            current_data = {}
         name = current_data.get('name')
         path = current_data.get('path')
         comment = current_data.get('comment')
+        return (name, path, comment)
+
+    def _show_row_data(self, row):
+        """Show one row data on input widgets.
+        """
+        self._clear_widgets()
+        name, path, comment = self._get_row_data(row)
         self.ui.lineEditName.setText(name)
-        self.ui.textEditPath.clear()
         self.ui.textEditPath.insertPlainText(path)
-        self.ui.textEditComment.clear()
         self.ui.textEditComment.insertPlainText(comment)
+
+    def _clear_widgets(self):
+        """Clear all input widgets.
+        """
+        self.ui.lineEditName.clear()
+        self.ui.textEditPath.clear()
+        self.ui.textEditComment.clear()
 
     def _load_ui_file(self, ui_path):
         """Load ui file return a pyside object.
