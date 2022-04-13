@@ -45,6 +45,7 @@ class MainWindow:
         self.ui.listWidget.clicked.connect(self.left_click_event)
         self.ui.listWidget.itemDoubleClicked.connect(self.double_click_event)
         self.ui.lineEditSearch.returnPressed.connect(self.search)
+        self.ui.moveFirstButton.clicked.connect(self.move_first)
         self.ui.saveButton.clicked.connect(self.save)
         if not os.path.exists(self.filepath):
             self.data = {'totalCount': 0, 'dataList': []}
@@ -108,13 +109,23 @@ class MainWindow:
             QMessageBox.critical(self.ui, '错误', f'找不到目标路径：{path}')
 
     def left_click_event(self):
-
         current_row = self.ui.listWidget.currentRow()
 
         # 检测有没有数据发生更改
 
         # 当前数据显示
         self._show_row_data(current_row)
+
+    def move_first(self):
+        current_row = self.ui.listWidget.currentRow()
+        if current_row < 0 or current_row >= self.data['totalCount']:
+            return
+        data = self.data['dataList'].pop(current_row)
+        self.data['dataList'].insert(0, data)
+        self.ui.listWidget.clear()
+        self._load_list_data()
+        self.ui.listWidget.setCurrentRow(0)
+        self.has_edited = True
 
     def save(self):
         """
