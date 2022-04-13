@@ -48,6 +48,7 @@ class MainWindow:
         self.ui.moveFirstButton.clicked.connect(self.move_first)
         self.ui.moveLastButton.clicked.connect(self.move_last)
         self.ui.moveUpButton.clicked.connect(self.move_up)
+        self.ui.moveDownButton.clicked.connect(self.move_down)
         self.ui.saveButton.clicked.connect(self.save)
         if not os.path.exists(self.filepath):
             self.data = {'totalCount': 0, 'dataList': []}
@@ -138,6 +139,19 @@ class MainWindow:
         self.ui.listWidget.clear()
         self._load_list_data()
         self.ui.listWidget.setCurrentRow(current_row - 1)
+        self.has_edited = True
+
+    def move_down(self):
+        current_row = self.ui.listWidget.currentRow()
+        if current_row < 0 or current_row >= self.data['totalCount']:
+            return
+        if current_row == self.data['totalCount'] - 1:
+            return
+        data = self.data['dataList'].pop(current_row)
+        self.data['dataList'].insert(current_row + 1, data)
+        self.ui.listWidget.clear()
+        self._load_list_data()
+        self.ui.listWidget.setCurrentRow(current_row + 1)
         self.has_edited = True
 
     def move_last(self):
