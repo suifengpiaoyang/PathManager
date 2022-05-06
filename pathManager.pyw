@@ -110,6 +110,7 @@ class MainWindow:
 
     def fresh(self):
         # 是否要将 listbox 的光标移到最前？
+        self._clear_all_widgets()
         self.ui.lineEditSearch.setFocus()
         self._data_init()
 
@@ -209,6 +210,11 @@ class MainWindow:
     def search(self):
         flag = self.ui.lineEditSearch.text()
         # self.ui.listWidget.clear()
+
+    def _clear_all_widgets(self):
+        self._clear_input_widgets()
+        self.ui.lineEditSearch.clear()
+        self.ui.listWidget.clear()
 
     def _clear_input_widgets(self):
         """Clear all input widgets.
