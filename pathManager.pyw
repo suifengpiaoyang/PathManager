@@ -49,12 +49,9 @@ class MainWindow:
         self.ui.moveLastButton.clicked.connect(self.move_last)
         self.ui.moveUpButton.clicked.connect(self.move_up)
         self.ui.moveDownButton.clicked.connect(self.move_down)
+        self.ui.freshButton.clicked.connect(self.fresh)
         self.ui.saveButton.clicked.connect(self.save)
-        if not os.path.exists(self.filepath):
-            self.data = {'totalCount': 0, 'dataList': []}
-        else:
-            self.data = JsonDb.from_json(self.filepath)
-            self._load_list_data()
+        self._data_init()
         self.need_save = False
         self.current_row = self.ui.listWidget.currentRow()
 
@@ -110,6 +107,11 @@ class MainWindow:
             os.startfile(path)
         except FileNotFoundError:
             QMessageBox.critical(self.ui, '错误', f'找不到目标路径：{path}')
+
+    def fresh(self):
+        # 是否要将 listbox 的光标移到最前？
+        self.ui.lineEditSearch.setFocus()
+        self._data_init()
 
     def left_click_event(self):
         current_row = self.ui.listWidget.currentRow()
@@ -201,8 +203,8 @@ class MainWindow:
         QMessageBox.about(self.ui, '提示', '\n   保存成功\t\n')
         # 保存成功后需要重载
         self.ui.listWidget.clear()
-        self._load_list_data()
         self._clear_input_widgets()
+        self._load_list_data()
 
     def search(self):
         flag = self.ui.lineEditSearch.text()
@@ -214,6 +216,13 @@ class MainWindow:
         self.ui.lineEditName.clear()
         self.ui.textEditPath.clear()
         self.ui.textEditComment.clear()
+
+    def _data_init(self):
+        if not os.path.exists(self.filepath):
+            self.data = {'totalCount': 0, 'dataList': []}
+        else:
+            self.data = JsonDb.from_json(self.filepath)
+            self._load_list_data()
 
     def _get_input_datas(self):
         name = self.ui.lineEditName.text()
