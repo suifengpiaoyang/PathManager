@@ -72,7 +72,7 @@ class MainWindow:
         self.ui.moveLastButton.clicked.connect(self.move_last)
         self.ui.moveUpButton.clicked.connect(self.move_up)
         self.ui.moveDownButton.clicked.connect(self.move_down)
-        self.ui.freshButton.clicked.connect(self.fresh)
+        self.ui.freshButton.clicked.connect(lambda:self.fresh())
         self.ui.saveButton.clicked.connect(self.save)
         self._data_init()
         self.current_row = self.ui.listWidget.currentRow()
