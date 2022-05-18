@@ -7,13 +7,9 @@ from PySide2.QtWidgets import (QApplication,
                                QListWidget,
                                QTableWidgetItem,
                                QMessageBox)
-from PySide2.QtCore import QFile, QIODevice
-
-
-def md5text(text):
-    md5 = hashlib.md5()
-    md5.update(text.encode('utf-8'))
-    return md5.hexdigest()
+from PySide2.QtCore import (QFile,
+                            QIODevice,
+                            Signal)
 
 
 class JsonDb(dict):
@@ -34,6 +30,8 @@ class JsonDb(dict):
 
 class CustomQListWidget(QListWidget):
 
+    dropMessage = Signal(str)
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.setAcceptDrops(True)
@@ -51,7 +49,8 @@ class CustomQListWidget(QListWidget):
 
     def dropEvent(self, event):
         urls = event.mimeData().urls()
-        self.addItem(urls[0].toLocalFile())
+        self.dropMessage.emit(urls[0].toLocalFile())
+        # self.addItem(urls[0].toLocalFile())
 
 
 class MainWindow:
@@ -67,6 +66,7 @@ class MainWindow:
         self.ui.deleteButton.clicked.connect(self.delete_item)
         self.ui.listWidget.clicked.connect(self.left_click_event)
         self.ui.listWidget.itemDoubleClicked.connect(self.double_click_event)
+        self.ui.listWidget.dropMessage.connect(self.drop_add_item)
         self.ui.lineEditSearch.returnPressed.connect(self.search)
         self.ui.moveFirstButton.clicked.connect(self.move_first)
         self.ui.moveLastButton.clicked.connect(self.move_last)
@@ -75,11 +75,11 @@ class MainWindow:
         self.ui.freshButton.clicked.connect(self.fresh)
         self.ui.saveButton.clicked.connect(self.save)
         self._data_init()
-        self.need_save = False
         self.current_row = self.ui.listWidget.currentRow()
 
     def add_item(self):
 
+        self.has_edited = True
         # 点击两次添加就将前面一次存进内存
         row_count = self.ui.listWidget.count()
 
@@ -106,14 +106,15 @@ class MainWindow:
         self.ui.listWidget.setCurrentRow(row_count)
 
     def delete_item(self):
-        self.has_edited = True
         current_row = self.ui.listWidget.currentRow()
+        if current_row < 0:
+            return
+        self.has_edited = True
         self.ui.listWidget.takeItem(current_row)
-        if current_row < self.data['totalCount'] and current_row > 0:
-            # handle datas
-            self.data['dataList'].pop(current_row)
-            self.data['totalCount'] -= 1
-        # gui show
+        self.data['dataList'].pop(current_row)
+        self.data['totalCount'] -= 1
+        # totalCount 是否还需要，这个函数里其实是不需要
+        # 这个参数的。
         self._clear_input_widgets()
         current_row = self.ui.listWidget.currentRow()
         self._show_row_data(current_row)
@@ -131,11 +132,37 @@ class MainWindow:
         except FileNotFoundError:
             QMessageBox.critical(self.ui, '错误', f'找不到目标路径：{path}')
 
-    def fresh(self):
-        # 是否要将 listbox 的光标移到最前？
+    def drop_add_item(self, message):
+        self.has_edited = True
+        row_count = self.ui.listWidget.count()
+        abs_path = message
+        basename = os.path.basename(abs_path)
+        datalist = {
+            'name': basename,
+            'path': abs_path
+        }
+        self.data['dataList'].append(datalist)
+        self.data['totalCount'] += 1
+        self._clear_input_widgets()
+        self.ui.listWidget.addItem(basename)
+        self.ui.lineEditName.setText(basename)
+        self.ui.textEditPath.append(abs_path)
+        self.ui.listWidget.setCurrentRow(row_count)
+
+    def fresh(self, reload=True):
+        if self.has_edited:
+            flag = QMessageBox.question(self.ui,
+                                        '警告',
+                                        '当前数据善未保存，是否确定要刷新？')
+            if flag == QMessageBox.Yes:
+                self.has_edited = False
+            else:
+                return
         self._clear_all_widgets()
         self.ui.lineEditSearch.setFocus()
-        self._data_init()
+        if reload:
+            self.data = JsonDb.from_json(self.filepath)
+        self._load_list_data()
 
     def left_click_event(self):
         current_row = self.ui.listWidget.currentRow()
@@ -224,11 +251,10 @@ class MainWindow:
 
         # 删除的保存不用特别处理
         self.data.save(self.filepath)
+        self.has_edited = False
         QMessageBox.about(self.ui, '提示', '\n   保存成功\t\n')
         # 保存成功后需要重载
-        self.ui.listWidget.clear()
-        self._clear_input_widgets()
-        self._load_list_data()
+        self.fresh()
 
     def search(self):
         flag = self.ui.lineEditSearch.text()
@@ -251,6 +277,7 @@ class MainWindow:
             self.data = {'totalCount': 0, 'dataList': []}
         else:
             self.data = JsonDb.from_json(self.filepath)
+            self.data['totalCount'] = len(self.data['dataList'])
             self._load_list_data()
 
     def _get_input_datas(self):
