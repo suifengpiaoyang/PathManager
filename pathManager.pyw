@@ -4,6 +4,7 @@ import json
 import hashlib
 from PySide2.QtUiTools import QUiLoader
 from PySide2.QtWidgets import (QApplication,
+                               QListWidget,
                                QTableWidgetItem,
                                QMessageBox)
 from PySide2.QtCore import QFile, QIODevice
@@ -29,6 +30,28 @@ class JsonDb(dict):
     def save(self, file):
         with open(file, 'w', encoding='utf-8')as fl:
             json.dump(self, fl, indent=4, ensure_ascii=False)
+
+
+class CustomQListWidget(QListWidget):
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.setAcceptDrops(True)
+
+    def mimeTypes(self):
+        mimetypes = super().mimeTypes()
+        mimetypes.append('text/uri-list')
+        return mimetypes
+
+    def dragEnterEvent(self, event):
+        if event.mimeData().hasUrls():
+            event.accept()
+        else:
+            event.ignore()
+
+    def dropEvent(self, event):
+        urls = event.mimeData().urls()
+        self.addItem(urls[0].toLocalFile())
 
 
 class MainWindow:
@@ -260,6 +283,7 @@ class MainWindow:
         """
         ui_file = QFile(ui_path)
         loader = QUiLoader()
+        loader.registerCustomWidget(CustomQListWidget)
         window = loader.load(ui_file)
         ui_file.close()
         return window

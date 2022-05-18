@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>758</width>
+    <width>847</width>
     <height>548</height>
    </rect>
   </property>
@@ -39,11 +39,20 @@
           </widget>
          </item>
          <item>
-          <widget class="QListWidget" name="listWidget">
+          <widget class="CustomQListWidget" name="listWidget">
            <property name="font">
             <font>
              <pointsize>13</pointsize>
             </font>
+           </property>
+           <property name="acceptDrops">
+            <bool>true</bool>
+           </property>
+           <property name="dragDropOverwriteMode">
+            <bool>false</bool>
+           </property>
+           <property name="dragDropMode">
+            <enum>QAbstractItemView::DragDrop</enum>
            </property>
           </widget>
          </item>
@@ -163,12 +172,19 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>758</width>
-     <height>29</height>
+     <width>847</width>
+     <height>36</height>
     </rect>
    </property>
   </widget>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>CustomQListWidget</class>
+   <extends>QListWidget</extends>
+   <header location="global">customqlistwidget.h</header>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections/>
 </ui>
