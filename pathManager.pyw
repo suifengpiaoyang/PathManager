@@ -274,7 +274,7 @@ class MainWindow:
 
     def _data_init(self):
         if not os.path.exists(self.filepath):
-            self.data = {'totalCount': 0, 'dataList': []}
+            self.data = JsonDb({'totalCount': 0, 'dataList': []})
         else:
             self.data = JsonDb.from_json(self.filepath)
             self.data['totalCount'] = len(self.data['dataList'])
