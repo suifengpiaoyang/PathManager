@@ -30,7 +30,7 @@ class JsonDb(dict):
 
 class CustomQListWidget(QListWidget):
 
-    dropMessage = Signal(str)
+    dropMessage = Signal(list)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -49,8 +49,7 @@ class CustomQListWidget(QListWidget):
 
     def dropEvent(self, event):
         urls = event.mimeData().urls()
-        self.dropMessage.emit(urls[0].toLocalFile())
-        # self.addItem(urls[0].toLocalFile())
+        self.dropMessage.emit(urls)
 
 
 class MainWindow:
@@ -72,7 +71,7 @@ class MainWindow:
         self.ui.moveLastButton.clicked.connect(self.move_last)
         self.ui.moveUpButton.clicked.connect(self.move_up)
         self.ui.moveDownButton.clicked.connect(self.move_down)
-        self.ui.freshButton.clicked.connect(lambda:self.fresh())
+        self.ui.freshButton.clicked.connect(lambda: self.fresh())
         self.ui.saveButton.clicked.connect(self.save)
         self._data_init()
         self.current_row = self.ui.listWidget.currentRow()
@@ -132,25 +131,25 @@ class MainWindow:
         except FileNotFoundError:
             QMessageBox.critical(self.ui, '错误', f'找不到目标路径：{path}')
 
-    def drop_add_item(self, message):
+    def drop_add_item(self, urllist):
         self.has_edited = True
-        row_count = self.ui.listWidget.count()
-        abs_path = message
-        basename = os.path.basename(abs_path)
-        datalist = {
-            'name': basename,
-            'path': abs_path
-        }
-        self.data['dataList'].append(datalist)
-        self.data['totalCount'] += 1
-        self._clear_input_widgets()
-        self.ui.listWidget.addItem(basename)
-        self.ui.lineEditName.setText(basename)
-        self.ui.textEditPath.append(abs_path)
-        self.ui.listWidget.setCurrentRow(row_count)
+        for QUrl in urllist:
+            path = QUrl.toLocalFile()
+            row_count = self.ui.listWidget.count()
+            basename = os.path.basename(path)
+            datalist = {
+                'name': basename,
+                'path': path
+            }
+            self.data['dataList'].append(datalist)
+            self.data['totalCount'] += 1
+        self.fresh(reload=False, show_pop_box=False)
+        self.ui.lineEditName.setText(self.data['dataList'][-1]['name'])
+        self.ui.textEditPath.append(self.data['dataList'][-1]['path'])
+        self.ui.listWidget.setCurrentRow(self.data['totalCount'] - 1)
 
-    def fresh(self, reload=True):
-        if self.has_edited:
+    def fresh(self, reload=True, show_pop_box=True):
+        if self.has_edited and show_pop_box:
             flag = QMessageBox.question(self.ui,
                                         '警告',
                                         '当前数据善未保存，是否确定要刷新？')
@@ -324,6 +323,7 @@ class MainWindow:
         self.ui.lineEditName.setText(name)
         self.ui.textEditPath.insertPlainText(path)
         self.ui.textEditComment.insertPlainText(comment)
+
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
