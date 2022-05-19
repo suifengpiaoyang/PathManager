@@ -226,6 +226,7 @@ class MainWindow:
         # 点击添加按钮的最后一项
         # current_row 的下标是从0开始的
         current_row = self.ui.listWidget.currentRow()
+        # 处理添加最后一行的部分
         if self.data['totalCount'] == current_row:
             name, path, comment = self._get_input_datas()
             if name:
@@ -238,16 +239,16 @@ class MainWindow:
                 self.data['totalCount'] += 1
                 self.has_edited = True
         # 编辑过的保存
-        # 第一种情况，保存当前选中的选项信息
-        # row_index = self.ui.listWidget.currentRow()
-        # name = self.ui.lineEditName.text()
-        # path = self.ui.textEditPath.toPlainText()
-        # comment = self.ui.textEditComment.toPlainText()
-        # self.data['dataList'][row_index]['name'] = name
-        # self.data['dataList'][row_index]['path'] = path
-        # self.data['dataList'][row_index]['comment'] = comment
-        # 第二种情况，修改很多项信息
-        # 需要捕捉按键在不同项之间的移动
+        # 先只考虑最简单的一种情况，只保存当前选择的那一行
+        # 将一下这种情况定义为编辑过
+        if current_row < self.data['totalCount'] and not self.has_edited:
+            name, path, comment = self._get_input_datas()
+            if name:
+                self.data['dataList'][current_row]['name'] = name
+                self.data['dataList'][current_row]['path'] = path
+                self.data['dataList'][current_row]['comment'] = comment
+            else:
+                QMessageBox.warning(self.ui, '警告', '名称部分不能为空！')
 
         # 删除的保存不用特别处理
         self.data.save(self.filepath)
