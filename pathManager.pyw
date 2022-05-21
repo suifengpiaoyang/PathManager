@@ -388,6 +388,11 @@ class MainWindow:
     def _show_context_menu(self, position):
         """Show context menu and handle slots.
         """
+        # 顺带触发了一次左键选中更新信息，这种处理方式有点偏门，
+        # 有点取巧。
+        # 本来想通过正常的右键 click 捕捉的，但是实际操作时发现
+        # 不知道为何右键选中的下标一直不对，故而放弃了那种做法。
+        self.left_click_event()
         open_selected_path = QAction('打开目标路径')
         open_console_window = QAction('打开console窗口')
         open_path_through_sublime = QAction('使用sublime text打开文件夹')
