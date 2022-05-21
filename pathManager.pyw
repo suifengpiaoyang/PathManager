@@ -3,12 +3,15 @@ import sys
 import json
 import hashlib
 from PySide2.QtUiTools import QUiLoader
-from PySide2.QtWidgets import (QApplication,
+from PySide2.QtWidgets import (QAction,
+                               QApplication,
                                QListWidget,
-                               QTableWidgetItem,
-                               QMessageBox)
+                               QMenu,
+                               QMessageBox,
+                               QTableWidgetItem)
 from PySide2.QtCore import (QFile,
                             QIODevice,
+                            Qt,
                             Signal)
 
 
@@ -61,19 +64,9 @@ class MainWindow:
         self.filepath = os.path.join(self.BASE_DIR, self.filename)
         self.has_edited = False
         self.ui = self._load_ui_file(self.ui_path)
-        self.ui.addButton.clicked.connect(self.add_item)
-        self.ui.deleteButton.clicked.connect(self.delete_item)
-        self.ui.listWidget.clicked.connect(self.left_click_event)
-        self.ui.listWidget.itemDoubleClicked.connect(self.double_click_event)
-        self.ui.listWidget.dropMessage.connect(self.drop_add_item)
-        self.ui.lineEditSearch.returnPressed.connect(self.search)
-        self.ui.moveFirstButton.clicked.connect(self.move_first)
-        self.ui.moveLastButton.clicked.connect(self.move_last)
-        self.ui.moveUpButton.clicked.connect(self.move_up)
-        self.ui.moveDownButton.clicked.connect(self.move_down)
-        self.ui.freshButton.clicked.connect(lambda: self.fresh())
-        self.ui.saveButton.clicked.connect(self.save)
-        self._data_init()
+        self.data_init()
+        self.add_context_menu()
+        self.handle_slots()
         self.current_row = self.ui.listWidget.currentRow()
 
     def add_item(self):
@@ -104,6 +97,19 @@ class MainWindow:
         self.ui.lineEditName.setFocus()
         self.ui.listWidget.setCurrentRow(row_count)
 
+    def add_context_menu(self):
+        self.ui.listWidget.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.ui.listWidget.customContextMenuRequested.connect(
+            self._show_context_menu)
+
+    def data_init(self):
+        if not os.path.exists(self.filepath):
+            self.data = JsonDb({'totalCount': 0, 'dataList': []})
+        else:
+            self.data = JsonDb.from_json(self.filepath)
+            self.data['totalCount'] = len(self.data['dataList'])
+            self._load_list_data()
+
     def delete_item(self):
         current_row = self.ui.listWidget.currentRow()
         if current_row < 0:
@@ -119,17 +125,7 @@ class MainWindow:
         self._show_row_data(current_row)
 
     def double_click_event(self):
-        current_index = self.ui.listWidget.currentRow()
-        if current_index >= self.data['totalCount']:
-            return
-        current_data = self.data['dataList'][current_index]
-        path = current_data.get('path')
-        if not path:
-            return
-        try:
-            os.startfile(path)
-        except FileNotFoundError:
-            QMessageBox.critical(self.ui, '错误', f'找不到目标路径：{path}')
+        self.open_selected_file()
 
     def drop_add_item(self, urllist):
         self.has_edited = True
@@ -162,6 +158,20 @@ class MainWindow:
         if reload:
             self.data = JsonDb.from_json(self.filepath)
         self._load_list_data()
+
+    def handle_slots(self):
+        self.ui.addButton.clicked.connect(self.add_item)
+        self.ui.deleteButton.clicked.connect(self.delete_item)
+        self.ui.listWidget.clicked.connect(self.left_click_event)
+        self.ui.listWidget.itemDoubleClicked.connect(self.double_click_event)
+        self.ui.listWidget.dropMessage.connect(self.drop_add_item)
+        self.ui.lineEditSearch.returnPressed.connect(self.search)
+        self.ui.moveFirstButton.clicked.connect(self.move_first)
+        self.ui.moveLastButton.clicked.connect(self.move_last)
+        self.ui.moveUpButton.clicked.connect(self.move_up)
+        self.ui.moveDownButton.clicked.connect(self.move_down)
+        self.ui.freshButton.clicked.connect(lambda: self.fresh())
+        self.ui.saveButton.clicked.connect(self.save)
 
     def left_click_event(self):
         current_row = self.ui.listWidget.currentRow()
@@ -217,6 +227,43 @@ class MainWindow:
         self.ui.listWidget.setCurrentRow(self.data['totalCount'] - 1)
         self.has_edited = True
 
+    def open_console_window(self):
+        directory = self._get_selected_directory()
+        if directory:
+            command = f'start "Console" /D "{directory}"'
+            os.system(command)
+
+    def open_path_through_sublime(self):
+        SUBLIME_HOME = os.environ.get('SUBLIME_HOME')
+        if SUBLIME_HOME is None:
+            QMessageBox.about(self.ui,
+                              '提示',
+                              '请设置环境变量SUBLIME_HOME,值为sublime text软件路径！')
+            return
+        directory = self._get_selected_directory()
+        if directory:
+            os.chdir(SUBLIME_HOME)
+            command = f'sublime.exe "{directory}"'
+            os.system(command)
+            os.chdir(self.BASE_DIR)
+            # 为什么这种写法不起作用？明明在 Console 里面能正常执行的。
+            # 是我考虑少了什么吗？
+            # program = os.path.join(SUBLIME_HOME, 'sublime_text.exe')
+            # command = f'"{program}" "{directory}"'
+            # os.system(command)
+
+    def open_selected_file(self):
+        path = self._get_selected_path()
+        if not path:
+            return
+        if self._check_path_exists(path):
+            os.startfile(path)
+
+    def open_selected_directory(self):
+        directory = self._get_selected_directory()
+        if directory:
+            os.startfile(directory)
+
     def save(self):
         """
         保存是对内存中的 self.data 进行保存。
@@ -260,6 +307,13 @@ class MainWindow:
         flag = self.ui.lineEditSearch.text()
         # self.ui.listWidget.clear()
 
+    def _check_path_exists(self, path):
+        if not os.path.exists(path):
+            QMessageBox.critical(self.ui, '错误', f'找不到目标路径：{path}')
+            return False
+        else:
+            return True
+
     def _clear_all_widgets(self):
         self._clear_input_widgets()
         self.ui.lineEditSearch.clear()
@@ -271,14 +325,6 @@ class MainWindow:
         self.ui.lineEditName.clear()
         self.ui.textEditPath.clear()
         self.ui.textEditComment.clear()
-
-    def _data_init(self):
-        if not os.path.exists(self.filepath):
-            self.data = JsonDb({'totalCount': 0, 'dataList': []})
-        else:
-            self.data = JsonDb.from_json(self.filepath)
-            self.data['totalCount'] = len(self.data['dataList'])
-            self._load_list_data()
 
     def _get_input_datas(self):
         name = self.ui.lineEditName.text()
@@ -298,6 +344,30 @@ class MainWindow:
         comment = current_data.get('comment')
         return (name, path, comment)
 
+    def _get_selected_directory(self):
+        path = self._get_selected_path()
+        if not path:
+            return
+        if not self._check_path_exists(path):
+            return
+        if os.path.isdir(path):
+            directory = path
+        elif os.path.isfile(path):
+            directory = os.path.dirname(path)
+        else:
+            # not work for url
+            return
+        return directory
+
+    def _get_selected_path(self):
+        """Get selected item path.
+        """
+        current_row = self.ui.listWidget.currentRow()
+        if current_row >= self.data['totalCount']:
+            return
+        _, path, _ = self._get_row_data(current_row)
+        return path
+
     def _load_list_data(self):
         row = 0
         while row < self.data['totalCount']:
@@ -314,6 +384,28 @@ class MainWindow:
         window = loader.load(ui_file)
         ui_file.close()
         return window
+
+    def _show_context_menu(self, position):
+        """Show context menu and handle slots.
+        """
+        open_selected_path = QAction('打开目标路径')
+        open_console_window = QAction('打开console窗口')
+        open_path_through_sublime = QAction('使用sublime text打开文件夹')
+        open_selected_file = QAction('打开目标文件(同双击)')
+
+        open_selected_path.triggered.connect(self.open_selected_directory)
+        open_console_window.triggered.connect(self.open_console_window)
+        open_path_through_sublime.triggered.connect(
+            self.open_path_through_sublime)
+        open_selected_file.triggered.connect(self.open_selected_file)
+
+        menu = QMenu(self.ui.listWidget)
+        menu.addAction(open_selected_path)
+        menu.addAction(open_console_window)
+        menu.addAction(open_path_through_sublime)
+        menu.addSeparator()
+        menu.addAction(open_selected_file)
+        menu.exec_(self.ui.listWidget.mapToGlobal(position))
 
     def _show_row_data(self, row):
         """Show one row data on input widgets.
