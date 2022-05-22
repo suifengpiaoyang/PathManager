@@ -1,4 +1,5 @@
 import os
+import re
 import sys
 import json
 import hashlib
@@ -63,6 +64,7 @@ class MainWindow:
         self.filename = 'data.json'
         self.filepath = os.path.join(self.BASE_DIR, self.filename)
         self.has_edited = False
+        self.search_mode = False
         self.ui = self._load_ui_file(self.ui_path)
         self.data_init()
         self.add_context_menu()
@@ -157,6 +159,9 @@ class MainWindow:
         self.ui.lineEditSearch.setFocus()
         if reload:
             self.data = JsonDb.from_json(self.filepath)
+        if self.search_mode:
+            self.data = self.data_backup
+            self._change_button_status(mode='enabled')
         self._load_list_data()
 
     def handle_slots(self):
@@ -305,7 +310,33 @@ class MainWindow:
 
     def search(self):
         flag = self.ui.lineEditSearch.text()
-        # self.ui.listWidget.clear()
+        if not flag:
+            self.fresh(reload=False)
+            return
+        self.search_mode = True
+        self.ui.listWidget.clear()
+        search_result = JsonDb({'dataList': [], 'totalCount': 0})
+        for index, item in enumerate(self.data['dataList']):
+            check_message = ''.join(item.values())
+            if re.search(r'{}'.format(flag), check_message, re.I):
+                search_result['dataList'].append(item)
+        search_result['totalCount'] = len(search_result['dataList'])
+        self._change_button_status(mode='disabled')
+        self.data, self.data_backup = search_result, self.data
+        self._load_list_data()
+
+    def _change_button_status(self, *, mode):
+        assert mode in ('enabled', 'disabled')
+        button_list = [self.ui.addButton, self.ui.deleteButton,
+                       self.ui.moveDownButton, self.ui.moveFirstButton,
+                       self.ui.moveUpButton, self.ui.moveLastButton,
+                       self.ui.saveButton]
+        if mode == 'disabled':
+            for button in button_list:
+                button.setEnabled(False)
+        elif mode == 'enabled':
+            for button in button_list:
+                button.setEnabled(True)
 
     def _check_path_exists(self, path):
         if not os.path.exists(path):
