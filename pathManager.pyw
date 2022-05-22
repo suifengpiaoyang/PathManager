@@ -314,16 +314,18 @@ class MainWindow:
         if not flag:
             self.fresh(reload=False)
             return
-        self.search_mode = True
+        if not self.search_mode:
+            self.data_backup = self.data
         self.ui.listWidget.clear()
         search_result = JsonDb({'dataList': [], 'totalCount': 0})
-        for index, item in enumerate(self.data['dataList']):
+        for index, item in enumerate(self.data_backup['dataList']):
             check_message = ''.join(item.values())
             if re.search(r'{}'.format(flag), check_message, re.I):
                 search_result['dataList'].append(item)
         search_result['totalCount'] = len(search_result['dataList'])
         self._change_button_status(mode='disabled')
-        self.data, self.data_backup = search_result, self.data
+        self.data = search_result
+        self.search_mode = True
         self._load_list_data()
 
     def _change_button_status(self, *, mode):
