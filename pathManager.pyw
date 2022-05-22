@@ -160,6 +160,7 @@ class MainWindow:
         if reload:
             self.data = JsonDb.from_json(self.filepath)
         if self.search_mode:
+            self.search_mode = False
             self.data = self.data_backup
             self._change_button_status(mode='enabled')
         self._load_list_data()
