@@ -3,6 +3,7 @@ import re
 import sys
 import json
 import hashlib
+import webbrowser
 from PySide2.QtGui import QIcon
 from PySide2.QtUiTools import QUiLoader
 from PySide2.QtWidgets import (QAction,
@@ -266,7 +267,9 @@ class MainWindow:
         path = self._get_selected_path()
         if not path:
             return
-        if self._check_path_exists(path):
+        if path.startswith('http'):
+            webbrowser.open(path)
+        elif self._check_path_exists(path):
             os.startfile(path)
 
     def open_selected_directory(self):
@@ -385,6 +388,8 @@ class MainWindow:
     def _get_selected_directory(self):
         path = self._get_selected_path()
         if not path:
+            return
+        if path.startswith('http'):
             return
         if not self._check_path_exists(path):
             return
