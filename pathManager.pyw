@@ -3,6 +3,7 @@ import re
 import sys
 import json
 import hashlib
+import subprocess
 import webbrowser
 from PySide2.QtGui import QIcon
 from PySide2.QtUiTools import QUiLoader
@@ -269,6 +270,8 @@ class MainWindow:
             return
         if path.startswith('http'):
             webbrowser.open(path)
+        elif path.startswith('ftp'):
+            subprocess.Popen(['explorer.exe', path])
         elif self._check_path_exists(path):
             os.startfile(path)
 
@@ -389,7 +392,7 @@ class MainWindow:
         path = self._get_selected_path()
         if not path:
             return
-        if path.startswith('http'):
+        if path.startswith(('http', 'ftp')):
             return
         if not self._check_path_exists(path):
             return
