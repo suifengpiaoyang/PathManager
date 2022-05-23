@@ -3,6 +3,7 @@ import re
 import sys
 import json
 import hashlib
+from PySide2.QtGui import QIcon
 from PySide2.QtUiTools import QUiLoader
 from PySide2.QtWidgets import (QAction,
                                QApplication,
@@ -66,6 +67,9 @@ class MainWindow:
         self.has_edited = False
         self.search_mode = False
         self.ui = self._load_ui_file(self.ui_path)
+        icon_path = os.path.join(self.BASE_DIR, 'static', 'folder.ico')
+        if os.path.exists(icon_path):
+            self.ui.setWindowIcon(QIcon(icon_path))
         self.data_init()
         self.add_context_menu()
         self.handle_slots()
