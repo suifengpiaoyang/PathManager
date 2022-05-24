@@ -64,18 +64,27 @@ class MainWindow:
     def __init__(self):
         self.BASE_DIR = os.path.dirname(os.path.abspath(__file__))
         self.ui_path = os.path.join(self.BASE_DIR, 'ui', 'main_window.ui')
-        self.filename = 'data.json'
-        self.filepath = os.path.join(self.BASE_DIR, self.filename)
-        self.has_edited = False
-        self.search_mode = False
+        self.filepath = os.path.join(self.BASE_DIR, 'data.json')
         self.ui = self._load_ui_file(self.ui_path)
+
+        # set gui icon
         icon_path = os.path.join(self.BASE_DIR, 'static', 'folder.ico')
         if os.path.exists(icon_path):
             self.ui.setWindowIcon(QIcon(icon_path))
-        self.data_init()
+
+        # set base data
+        if not os.path.exists(self.filepath):
+            self.data = JsonDb({'totalCount': 0, 'dataList': []})
+        else:
+            self.data = JsonDb.from_json(self.filepath)
+            self.data['totalCount'] = len(self.data['dataList'])
+            self._load_list_data()
+
+        self.has_edited = False
+        self.search_mode = False
+
         self.add_context_menu()
         self.handle_slots()
-        self.current_row = self.ui.listWidget.currentRow()
 
     def add_item(self):
 
@@ -109,14 +118,6 @@ class MainWindow:
         self.ui.listWidget.setContextMenuPolicy(Qt.CustomContextMenu)
         self.ui.listWidget.customContextMenuRequested.connect(
             self._show_context_menu)
-
-    def data_init(self):
-        if not os.path.exists(self.filepath):
-            self.data = JsonDb({'totalCount': 0, 'dataList': []})
-        else:
-            self.data = JsonDb.from_json(self.filepath)
-            self.data['totalCount'] = len(self.data['dataList'])
-            self._load_list_data()
 
     def delete_item(self):
         current_row = self.ui.listWidget.currentRow()
@@ -459,7 +460,7 @@ class MainWindow:
         menu.exec_(self.ui.listWidget.mapToGlobal(position))
 
     def _show_row_data(self, row):
-        """Show one row data on input widgets.
+        """Show one row data to input widgets.
         """
         self._clear_input_widgets()
         name, path, comment = self._get_row_data(row)
