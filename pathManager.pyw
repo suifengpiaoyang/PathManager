@@ -137,6 +137,9 @@ class MainWindow:
         self.open_selected_file()
 
     def drop_add_item(self, urllist):
+        if self.search_mode:
+            QMessageBox.about(self.ui, '提示', '搜索状态下不支持拖动。')
+            return
         self.has_edited = True
         for QUrl in urllist:
             path = QUrl.toLocalFile()
