@@ -6,17 +6,16 @@ import hashlib
 import subprocess
 import webbrowser
 from PySide2.QtGui import QIcon
-from PySide2.QtUiTools import QUiLoader
 from PySide2.QtWidgets import (QAction,
                                QApplication,
                                QListWidget,
+                               QMainWindow,
                                QMenu,
                                QMessageBox,
                                QTableWidgetItem)
-from PySide2.QtCore import (QFile,
-                            QIODevice,
-                            Qt,
-                            Signal)
+from PySide2.QtCore import Qt
+
+from ui.main_window import Ui_MainWindow
 
 
 class JsonDb(dict):
@@ -35,42 +34,21 @@ class JsonDb(dict):
             json.dump(self, fl, indent=4, ensure_ascii=False)
 
 
-class CustomQListWidget(QListWidget):
-
-    dropMessage = Signal(list)
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.setAcceptDrops(True)
-
-    def mimeTypes(self):
-        mimetypes = super().mimeTypes()
-        mimetypes.append('text/uri-list')
-        return mimetypes
-
-    def dragEnterEvent(self, event):
-        if event.mimeData().hasUrls():
-            event.accept()
-        else:
-            event.ignore()
-
-    def dropEvent(self, event):
-        urls = event.mimeData().urls()
-        self.dropMessage.emit(urls)
-
-
-class MainWindow:
+class MainWindow(QMainWindow):
 
     def __init__(self):
+        super().__init__()
+
+        self.ui = Ui_MainWindow()
+        self.ui.setupUi(self)
+
         self.BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-        self.ui_path = os.path.join(self.BASE_DIR, 'ui', 'main_window.ui')
         self.filepath = os.path.join(self.BASE_DIR, 'data.json')
-        self.ui = self._load_ui_file(self.ui_path)
 
         # set gui icon
         icon_path = os.path.join(self.BASE_DIR, 'static', 'folder.ico')
         if os.path.exists(icon_path):
-            self.ui.setWindowIcon(QIcon(icon_path))
+            self.setWindowIcon(QIcon(icon_path))
 
         # set base data
         if not os.path.exists(self.filepath):
@@ -95,7 +73,7 @@ class MainWindow:
         if row_count - self.data['totalCount'] == 1:
             name, path, comment = self._get_input_datas()
             if not name:
-                QMessageBox.critical(self.ui, '错误', '名称部分不能为空！')
+                QMessageBox.critical(self, '错误', '名称部分不能为空！')
                 self.ui.lineEditName.setFocus()
                 return
             previous_data = {
@@ -138,7 +116,7 @@ class MainWindow:
 
     def drop_add_item(self, urllist):
         if self.search_mode:
-            QMessageBox.about(self.ui, '提示', '搜索状态下不支持拖动。')
+            QMessageBox.about(self, '提示', '搜索状态下不支持拖动。')
             return
         self.has_edited = True
         for QUrl in urllist:
@@ -158,7 +136,7 @@ class MainWindow:
 
     def fresh(self, reload=True, show_pop_box=True):
         if self.has_edited and show_pop_box:
-            flag = QMessageBox.question(self.ui,
+            flag = QMessageBox.question(self,
                                         '警告',
                                         '当前数据善未保存，是否确定要刷新？')
             if flag == QMessageBox.Yes:
@@ -252,7 +230,7 @@ class MainWindow:
     def open_path_through_sublime(self):
         SUBLIME_HOME = os.environ.get('SUBLIME_HOME')
         if SUBLIME_HOME is None:
-            QMessageBox.about(self.ui,
+            QMessageBox.about(self,
                               '提示',
                               '请设置环境变量SUBLIME_HOME,值为sublime text软件路径！')
             return
@@ -314,12 +292,12 @@ class MainWindow:
                 self.data['dataList'][current_row]['path'] = path
                 self.data['dataList'][current_row]['comment'] = comment
             else:
-                QMessageBox.warning(self.ui, '警告', '名称部分不能为空！')
+                QMessageBox.warning(self, '警告', '名称部分不能为空！')
 
         # 删除的保存不用特别处理
         self.data.save(self.filepath)
         self.has_edited = False
-        QMessageBox.about(self.ui, '提示', '\n   保存成功\t\n')
+        QMessageBox.about(self, '提示', '\n   保存成功\t\n')
         # 保存成功后需要重载
         self.fresh()
 
@@ -357,7 +335,7 @@ class MainWindow:
 
     def _check_path_exists(self, path):
         if not os.path.exists(path):
-            QMessageBox.critical(self.ui, '错误', f'找不到目标路径：{path}')
+            QMessageBox.critical(self, '错误', f'找不到目标路径：{path}')
             return False
         else:
             return True
@@ -425,16 +403,6 @@ class MainWindow:
                 self.ui.listWidget.addItem(item['name'])
                 row += 1
 
-    def _load_ui_file(self, ui_path):
-        """Load ui file return a pyside object.
-        """
-        ui_file = QFile(ui_path)
-        loader = QUiLoader()
-        loader.registerCustomWidget(CustomQListWidget)
-        window = loader.load(ui_file)
-        ui_file.close()
-        return window
-
     def _show_context_menu(self, position):
         """Show context menu and handle slots.
         """
@@ -475,5 +443,5 @@ class MainWindow:
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     window = MainWindow()
-    window.ui.show()
+    window.show()
     sys.exit(app.exec_())

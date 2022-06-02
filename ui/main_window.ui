@@ -203,7 +203,7 @@
   <customwidget>
    <class>CustomQListWidget</class>
    <extends>QListWidget</extends>
-   <header location="global">customqlistwidget.h</header>
+   <header location="global">custom_widgets.h</header>
   </customwidget>
  </customwidgets>
  <resources/>
