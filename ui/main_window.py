@@ -19,7 +19,7 @@ class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         if not MainWindow.objectName():
             MainWindow.setObjectName(u"MainWindow")
-        MainWindow.resize(703, 492)
+        MainWindow.resize(825, 546)
         font = QFont()
         font.setPointSize(13)
         MainWindow.setFont(font)
@@ -136,7 +136,7 @@ class Ui_MainWindow(object):
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QMenuBar(MainWindow)
         self.menubar.setObjectName(u"menubar")
-        self.menubar.setGeometry(QRect(0, 0, 703, 29))
+        self.menubar.setGeometry(QRect(0, 0, 825, 36))
         MainWindow.setMenuBar(self.menubar)
 
         self.retranslateUi(MainWindow)
