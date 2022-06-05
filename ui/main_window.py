@@ -13,6 +13,7 @@ from PySide2.QtGui import *
 from PySide2.QtWidgets import *
 
 from custom_widgets import CustomQListWidget
+from custom_widgets import CustomQTextEdit
 
 
 class Ui_MainWindow(object):
@@ -65,12 +66,12 @@ class Ui_MainWindow(object):
 
         self.verticalLayout_2.addWidget(self.lineEditName)
 
-        self.textEditPath = QTextEdit(self.frame_2)
+        self.textEditPath = CustomQTextEdit(self.frame_2)
         self.textEditPath.setObjectName(u"textEditPath")
 
         self.verticalLayout_2.addWidget(self.textEditPath)
 
-        self.textEditComment = QTextEdit(self.frame_2)
+        self.textEditComment = CustomQTextEdit(self.frame_2)
         self.textEditComment.setObjectName(u"textEditComment")
 
         self.verticalLayout_2.addWidget(self.textEditComment)

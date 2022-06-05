@@ -118,6 +118,10 @@ class MainWindow(QMainWindow):
         self.ui.listWidget.setCurrentRow(self.data['totalCount'] - 1)
 
     def finished_edit_name(self):
+        # 目前的搜索模式不支持修改数据
+        # 因为里面的数据映射逻辑善未完成
+        if self.search_mode:
+            return
         current_row = self.ui.listWidget.currentRow()
         if current_row == -1:
             return
@@ -129,24 +133,27 @@ class MainWindow(QMainWindow):
         self.ui.listWidget.setCurrentRow(current_row)
         self.has_edited = True
 
-    # def finished_edit_path(self):
-    #     current_row = self.ui.listWidget.currentRow()
-    #     if current_row == -1:
-    #         return
-    #     list_counts = self.ui.listWidget.count()
-    #     path = self.ui.textEditPath.text()
-    #     self.data['dataList'][current_row]['path'] = path
-    #     self.has_edited = True
+    def finished_edit_path(self):
+        if self.search_mode:
+            return
+        current_row = self.ui.listWidget.currentRow()
+        if current_row == -1:
+            return
+        list_counts = self.ui.listWidget.count()
+        path = self.ui.textEditPath.toPlainText()
+        self.data['dataList'][current_row]['path'] = path
+        self.has_edited = True
 
-    # def finished_edit_comment(self):
-    #     current_row = self.ui.listWidget.currentRow()
-    #     if current_row == -1:
-    #         return
-    #     list_counts = self.ui.listWidget.count()
-    #     comment = self.ui.textEditComment.text()
-    #     self.data['dataList'][current_row]['comment'] = comment
-    #     self.has_edited = True
-    #     self.data.pretty_print()
+    def finished_edit_comment(self):
+        if self.search_mode:
+            return
+        current_row = self.ui.listWidget.currentRow()
+        if current_row == -1:
+            return
+        list_counts = self.ui.listWidget.count()
+        comment = self.ui.textEditComment.toPlainText()
+        self.data['dataList'][current_row]['comment'] = comment
+        self.has_edited = True
 
     def fresh(self, reload=True, show_pop_box=True):
         if self.has_edited and show_pop_box:
@@ -174,8 +181,9 @@ class MainWindow(QMainWindow):
         self.ui.listWidget.itemDoubleClicked.connect(self.double_click_event)
         self.ui.listWidget.dropMessage.connect(self.drop_add_item)
         self.ui.lineEditName.editingFinished.connect(self.finished_edit_name)
-        # self.ui.textEditPath.editingFinished.connect(self.finished_edit_path)
-        # self.ui.textEditComment.editingFinished.connect(self.finished_edit_comment)
+        self.ui.textEditPath.editingFinished.connect(self.finished_edit_path)
+        self.ui.textEditComment.editingFinished.connect(
+            self.finished_edit_comment)
         self.ui.lineEditSearch.returnPressed.connect(self.search)
         self.ui.moveFirstButton.clicked.connect(self.move_first)
         self.ui.moveLastButton.clicked.connect(self.move_last)

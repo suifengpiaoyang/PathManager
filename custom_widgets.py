@@ -1,5 +1,5 @@
 from PySide2.QtCore import Signal
-from PySide2.QtWidgets import QListWidget
+from PySide2.QtWidgets import QListWidget, QTextEdit
 
 
 class CustomQListWidget(QListWidget):
@@ -24,3 +24,16 @@ class CustomQListWidget(QListWidget):
     def dropEvent(self, event):
         urls = event.mimeData().urls()
         self.dropMessage.emit(urls)
+
+
+class CustomQTextEdit(QTextEdit):
+
+    editingFinished = Signal()
+
+    def focusInEvent(self, event):
+        self._base_data = self.toPlainText()
+        super().focusInEvent(event)
+
+    def focusOutEvent(self, event):
+        if self.toPlainText() != self._base_data:
+            self.editingFinished.emit()

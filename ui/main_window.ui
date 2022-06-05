@@ -88,14 +88,14 @@
           </widget>
          </item>
          <item>
-          <widget class="QTextEdit" name="textEditPath">
+          <widget class="CustomQTextEdit" name="textEditPath">
            <property name="placeholderText">
             <string>路径</string>
            </property>
           </widget>
          </item>
          <item>
-          <widget class="QTextEdit" name="textEditComment">
+          <widget class="CustomQTextEdit" name="textEditComment">
            <property name="placeholderText">
             <string>备注</string>
            </property>
@@ -203,6 +203,11 @@
   <customwidget>
    <class>CustomQListWidget</class>
    <extends>QListWidget</extends>
+   <header location="global">custom_widgets.h</header>
+  </customwidget>
+  <customwidget>
+   <class>CustomQTextEdit</class>
+   <extends>QTextEdit</extends>
    <header location="global">custom_widgets.h</header>
   </customwidget>
  </customwidgets>
