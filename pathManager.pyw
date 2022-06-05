@@ -66,29 +66,12 @@ class MainWindow(QMainWindow):
 
     def add_item(self):
 
-        self.has_edited = True
-        # 点击两次添加就将前面一次存进内存
         row_count = self.ui.listWidget.count()
-
-        if row_count - self.data['totalCount'] == 1:
-            name, path, comment = self._get_input_datas()
-            if not name:
-                QMessageBox.critical(self, '错误', '名称部分不能为空！')
-                self.ui.lineEditName.setFocus()
-                return
-            previous_data = {
-                'name': name,
-                'path': path,
-                'comment': comment
-            }
-            self.data['dataList'].append(previous_data)
-            self.ui.listWidget.insertItem(row_count - 1, name)
-            self._clear_input_widgets()
-            self.data['totalCount'] += 1
-            self.has_edited = True
-        else:
-            self.ui.listWidget.addItem('未命名')
-            self._clear_input_widgets()
+        self.ui.listWidget.addItem('未命名')
+        self._clear_input_widgets()
+        self.data['dataList'].append({'name': '', 'path': '', 'comment': ''})
+        self.data['totalCount'] += 1
+        self.has_edited = True
         self.ui.lineEditName.setFocus()
         self.ui.listWidget.setCurrentRow(row_count)
 
@@ -134,6 +117,37 @@ class MainWindow(QMainWindow):
         self.ui.textEditPath.append(self.data['dataList'][-1]['path'])
         self.ui.listWidget.setCurrentRow(self.data['totalCount'] - 1)
 
+    def finished_edit_name(self):
+        current_row = self.ui.listWidget.currentRow()
+        if current_row == -1:
+            return
+        list_counts = self.ui.listWidget.count()
+        name = self.ui.lineEditName.text()
+        self.data['dataList'][current_row]['name'] = name
+        self.ui.listWidget.clear()
+        self._load_list_data()
+        self.ui.listWidget.setCurrentRow(current_row)
+        self.has_edited = True
+
+    # def finished_edit_path(self):
+    #     current_row = self.ui.listWidget.currentRow()
+    #     if current_row == -1:
+    #         return
+    #     list_counts = self.ui.listWidget.count()
+    #     path = self.ui.textEditPath.text()
+    #     self.data['dataList'][current_row]['path'] = path
+    #     self.has_edited = True
+
+    # def finished_edit_comment(self):
+    #     current_row = self.ui.listWidget.currentRow()
+    #     if current_row == -1:
+    #         return
+    #     list_counts = self.ui.listWidget.count()
+    #     comment = self.ui.textEditComment.text()
+    #     self.data['dataList'][current_row]['comment'] = comment
+    #     self.has_edited = True
+    #     self.data.pretty_print()
+
     def fresh(self, reload=True, show_pop_box=True):
         if self.has_edited and show_pop_box:
             flag = QMessageBox.question(self,
@@ -159,6 +173,9 @@ class MainWindow(QMainWindow):
         self.ui.listWidget.clicked.connect(self.left_click_event)
         self.ui.listWidget.itemDoubleClicked.connect(self.double_click_event)
         self.ui.listWidget.dropMessage.connect(self.drop_add_item)
+        self.ui.lineEditName.editingFinished.connect(self.finished_edit_name)
+        # self.ui.textEditPath.editingFinished.connect(self.finished_edit_path)
+        # self.ui.textEditComment.editingFinished.connect(self.finished_edit_comment)
         self.ui.lineEditSearch.returnPressed.connect(self.search)
         self.ui.moveFirstButton.clicked.connect(self.move_first)
         self.ui.moveLastButton.clicked.connect(self.move_last)
