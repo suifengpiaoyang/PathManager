@@ -45,6 +45,8 @@ class MainWindow(QMainWindow):
         self.BASE_DIR = os.path.dirname(os.path.abspath(__file__))
         self.filepath = os.path.join(self.BASE_DIR, 'data.json')
 
+        self.BASE_WINDOW_TITLE = self.windowTitle()
+
         # set gui icon
         icon_path = os.path.join(self.BASE_DIR, 'static', 'folder.ico')
         if os.path.exists(icon_path):
@@ -71,7 +73,7 @@ class MainWindow(QMainWindow):
         self._clear_input_widgets()
         self.data['dataList'].append({'name': '', 'path': '', 'comment': ''})
         self.data['totalCount'] += 1
-        self.has_edited = True
+        self.set_has_edited(True)
         self.ui.lineEditName.setFocus()
         self.ui.listWidget.setCurrentRow(row_count)
 
@@ -80,11 +82,33 @@ class MainWindow(QMainWindow):
         self.ui.listWidget.customContextMenuRequested.connect(
             self._show_context_menu)
 
+    def closeEvent(self, event):
+        if self.has_edited:
+            flag = QMessageBox.warning(self,
+                                       '警告',
+                                       '当前数据善未保存，是否要保存数据？',
+                                       QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel)
+            if flag == QMessageBox.StandardButton.Yes:
+                # 保存关闭
+                # save data and close window
+                self.save(flash_flag=False)
+                # self.set_has_edited(False)
+                event.accept()
+            elif flag == QMessageBox.StandardButton.No:
+                # 不保存数据，强制关闭
+                # not save data and close window
+                event.accept()
+            elif flag == QMessageBox.StandardButton.Cancel:
+                # 取消关闭操作
+                event.ignore()
+        else:
+            event.accept()
+
     def delete_item(self):
         current_row = self.ui.listWidget.currentRow()
         if current_row < 0:
             return
-        self.has_edited = True
+        self.set_has_edited(True)
         self.ui.listWidget.takeItem(current_row)
         self.data['dataList'].pop(current_row)
         self.data['totalCount'] -= 1
@@ -101,7 +125,7 @@ class MainWindow(QMainWindow):
         if self.search_mode:
             QMessageBox.about(self, '提示', '搜索状态下不支持拖动。')
             return
-        self.has_edited = True
+        self.set_has_edited(True)
         for QUrl in urllist:
             path = QUrl.toLocalFile()
             row_count = self.ui.listWidget.count()
@@ -131,7 +155,7 @@ class MainWindow(QMainWindow):
         self.ui.listWidget.clear()
         self._load_list_data()
         self.ui.listWidget.setCurrentRow(current_row)
-        self.has_edited = True
+        self.set_has_edited(True)
 
     def finished_edit_path(self):
         if self.search_mode:
@@ -142,7 +166,7 @@ class MainWindow(QMainWindow):
         list_counts = self.ui.listWidget.count()
         path = self.ui.textEditPath.toPlainText()
         self.data['dataList'][current_row]['path'] = path
-        self.has_edited = True
+        self.set_has_edited(True)
 
     def finished_edit_comment(self):
         if self.search_mode:
@@ -153,7 +177,7 @@ class MainWindow(QMainWindow):
         list_counts = self.ui.listWidget.count()
         comment = self.ui.textEditComment.toPlainText()
         self.data['dataList'][current_row]['comment'] = comment
-        self.has_edited = True
+        self.set_has_edited(True)
 
     def fresh(self, reload=True, show_pop_box=True):
         if self.has_edited and show_pop_box:
@@ -209,7 +233,7 @@ class MainWindow(QMainWindow):
         self.ui.listWidget.clear()
         self._load_list_data()
         self.ui.listWidget.setCurrentRow(0)
-        self.has_edited = True
+        self.set_has_edited(True)
 
     def move_up(self):
         current_row = self.ui.listWidget.currentRow()
@@ -220,7 +244,7 @@ class MainWindow(QMainWindow):
         self.ui.listWidget.clear()
         self._load_list_data()
         self.ui.listWidget.setCurrentRow(current_row - 1)
-        self.has_edited = True
+        self.set_has_edited(True)
 
     def move_down(self):
         current_row = self.ui.listWidget.currentRow()
@@ -233,7 +257,7 @@ class MainWindow(QMainWindow):
         self.ui.listWidget.clear()
         self._load_list_data()
         self.ui.listWidget.setCurrentRow(current_row + 1)
-        self.has_edited = True
+        self.set_has_edited(True)
 
     def move_last(self):
         current_row = self.ui.listWidget.currentRow()
@@ -244,7 +268,7 @@ class MainWindow(QMainWindow):
         self.ui.listWidget.clear()
         self._load_list_data()
         self.ui.listWidget.setCurrentRow(self.data['totalCount'] - 1)
-        self.has_edited = True
+        self.set_has_edited(True)
 
     def open_console_window(self):
         directory = self._get_selected_directory()
@@ -287,44 +311,16 @@ class MainWindow(QMainWindow):
         if directory:
             os.startfile(directory)
 
-    def save(self):
+    def save(self, flash_flag=True):
         """
         保存是对内存中的 self.data 进行保存。
         """
-
-        # 点击添加按钮的最后一项
-        # current_row 的下标是从0开始的
-        current_row = self.ui.listWidget.currentRow()
-        # 处理添加最后一行的部分
-        if self.data['totalCount'] == current_row:
-            name, path, comment = self._get_input_datas()
-            if name:
-                data = {
-                    'name': name,
-                    'path': path,
-                    'comment': comment
-                }
-                self.data['dataList'].append(data)
-                self.data['totalCount'] += 1
-                self.has_edited = True
-        # 编辑过的保存
-        # 先只考虑最简单的一种情况，只保存当前选择的那一行
-        # 将一下这种情况定义为编辑过
-        if current_row < self.data['totalCount'] and not self.has_edited:
-            name, path, comment = self._get_input_datas()
-            if name:
-                self.data['dataList'][current_row]['name'] = name
-                self.data['dataList'][current_row]['path'] = path
-                self.data['dataList'][current_row]['comment'] = comment
-            else:
-                QMessageBox.warning(self, '警告', '名称部分不能为空！')
-
-        # 删除的保存不用特别处理
         self.data.save(self.filepath)
-        self.has_edited = False
+        self.set_has_edited(False)
         QMessageBox.about(self, '提示', '\n   保存成功\t\n')
         # 保存成功后需要重载
-        self.fresh()
+        if flash_flag:
+            self.fresh()
 
     def search(self):
         flag = self.ui.lineEditSearch.text()
@@ -344,6 +340,13 @@ class MainWindow(QMainWindow):
         self.data = search_result
         self.search_mode = True
         self._load_list_data()
+
+    def set_has_edited(self, state=True):
+        self.has_edited = state
+        if state:
+            self.setWindowTitle(self.BASE_WINDOW_TITLE + ' *')
+        else:
+            self.setWindowTitle(self.BASE_WINDOW_TITLE)
 
     def _change_button_status(self, *, mode):
         assert mode in ('enabled', 'disabled')
