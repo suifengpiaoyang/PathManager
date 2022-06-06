@@ -357,6 +357,7 @@ class MainWindow(QMainWindow):
             QMessageBox.critical(self, '错误', f'[{sublime_text_path}]不存在！')
             return
         SUBLIME_HOME = os.path.dirname(sublime_text_path)
+        program_name = os.path.basename(sublime_text_path)
         path = self._get_selected_path()
         if not path:
             QMessageBox.critical(self, '错误', '路径不能为空值！')
@@ -374,7 +375,7 @@ class MainWindow(QMainWindow):
             target = self._get_selected_directory()
             if not target:
                 return
-        command = f'sublime.exe "{target}"'
+        command = f'{program_name} "{target}"'
         os.system(command)
         os.chdir(BASE_DIR)
         # 为什么这种写法不起作用？明明在 Console 里面能正常执行的。
