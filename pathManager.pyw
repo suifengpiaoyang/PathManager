@@ -250,7 +250,7 @@ class MainWindow(QMainWindow):
                                         '警告',
                                         '当前数据善未保存，是否确定要刷新？')
             if flag == QMessageBox.Yes:
-                self.has_edited = False
+                self.set_has_edited(False)
             else:
                 return
         self._clear_all_widgets()
