@@ -24,6 +24,8 @@ class Ui_MainWindow(object):
         font = QFont()
         font.setPointSize(13)
         MainWindow.setFont(font)
+        self.configAction = QAction(MainWindow)
+        self.configAction.setObjectName(u"configAction")
         self.centralwidget = QWidget(MainWindow)
         self.centralwidget.setObjectName(u"centralwidget")
         self.verticalLayout_3 = QVBoxLayout(self.centralwidget)
@@ -36,7 +38,7 @@ class Ui_MainWindow(object):
         self.frame.setFrameShadow(QFrame.Raised)
         self.verticalLayout = QVBoxLayout(self.frame)
         self.verticalLayout.setObjectName(u"verticalLayout")
-        self.verticalLayout.setContentsMargins(0, -1, 0, -1)
+        self.verticalLayout.setContentsMargins(0, 0, 0, 0)
         self.lineEditSearch = QLineEdit(self.frame)
         self.lineEditSearch.setObjectName(u"lineEditSearch")
 
@@ -60,7 +62,7 @@ class Ui_MainWindow(object):
         self.frame_2.setFrameShadow(QFrame.Raised)
         self.verticalLayout_2 = QVBoxLayout(self.frame_2)
         self.verticalLayout_2.setObjectName(u"verticalLayout_2")
-        self.verticalLayout_2.setContentsMargins(0, -1, 0, -1)
+        self.verticalLayout_2.setContentsMargins(0, 0, 0, 0)
         self.lineEditName = QLineEdit(self.frame_2)
         self.lineEditName.setObjectName(u"lineEditName")
 
@@ -138,7 +140,15 @@ class Ui_MainWindow(object):
         self.menubar = QMenuBar(MainWindow)
         self.menubar.setObjectName(u"menubar")
         self.menubar.setGeometry(QRect(0, 0, 690, 29))
+        self.menuConfig = QMenu(self.menubar)
+        self.menuConfig.setObjectName(u"menuConfig")
+        self.menuAbout = QMenu(self.menubar)
+        self.menuAbout.setObjectName(u"menuAbout")
         MainWindow.setMenuBar(self.menubar)
+
+        self.menubar.addAction(self.menuConfig.menuAction())
+        self.menubar.addAction(self.menuAbout.menuAction())
+        self.menuConfig.addAction(self.configAction)
 
         self.retranslateUi(MainWindow)
 
@@ -147,6 +157,10 @@ class Ui_MainWindow(object):
 
     def retranslateUi(self, MainWindow):
         MainWindow.setWindowTitle(QCoreApplication.translate("MainWindow", u"\u8def\u5f84\u7ba1\u7406\u5de5\u5177", None))
+        self.configAction.setText(QCoreApplication.translate("MainWindow", u"\u914d\u7f6e", None))
+#if QT_CONFIG(tooltip)
+        self.configAction.setToolTip(QCoreApplication.translate("MainWindow", u"\u914d\u7f6e", None))
+#endif // QT_CONFIG(tooltip)
         self.lineEditSearch.setPlaceholderText(QCoreApplication.translate("MainWindow", u"\u641c\u7d22", None))
         self.lineEditName.setPlaceholderText(QCoreApplication.translate("MainWindow", u"\u540d\u79f0", None))
         self.textEditPath.setPlaceholderText(QCoreApplication.translate("MainWindow", u"\u8def\u5f84", None))
@@ -159,5 +173,7 @@ class Ui_MainWindow(object):
         self.moveLastButton.setText(QCoreApplication.translate("MainWindow", u"\u79fb\u5230\u6700\u540e", None))
         self.freshButton.setText(QCoreApplication.translate("MainWindow", u"\u5237\u65b0", None))
         self.saveButton.setText(QCoreApplication.translate("MainWindow", u"\u4fdd\u5b58", None))
+        self.menuConfig.setTitle(QCoreApplication.translate("MainWindow", u"\u9996\u9009\u9879", None))
+        self.menuAbout.setTitle(QCoreApplication.translate("MainWindow", u"\u5173\u4e8e", None))
     # retranslateUi
 

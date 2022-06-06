@@ -34,7 +34,13 @@
          <property name="leftMargin">
           <number>0</number>
          </property>
+         <property name="topMargin">
+          <number>0</number>
+         </property>
          <property name="rightMargin">
+          <number>0</number>
+         </property>
+         <property name="bottomMargin">
           <number>0</number>
          </property>
          <item>
@@ -77,7 +83,13 @@
          <property name="leftMargin">
           <number>0</number>
          </property>
+         <property name="topMargin">
+          <number>0</number>
+         </property>
          <property name="rightMargin">
+          <number>0</number>
+         </property>
+         <property name="bottomMargin">
           <number>0</number>
          </property>
          <item>
@@ -197,7 +209,28 @@
      <height>29</height>
     </rect>
    </property>
+   <widget class="QMenu" name="menuConfig">
+    <property name="title">
+     <string>首选项</string>
+    </property>
+    <addaction name="configAction"/>
+   </widget>
+   <widget class="QMenu" name="menuAbout">
+    <property name="title">
+     <string>关于</string>
+    </property>
+   </widget>
+   <addaction name="menuConfig"/>
+   <addaction name="menuAbout"/>
   </widget>
+  <action name="configAction">
+   <property name="text">
+    <string>配置</string>
+   </property>
+   <property name="toolTip">
+    <string>配置</string>
+   </property>
+  </action>
  </widget>
  <customwidgets>
   <customwidget>

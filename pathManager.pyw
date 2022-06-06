@@ -8,14 +8,22 @@ import webbrowser
 from PySide2.QtGui import QIcon
 from PySide2.QtWidgets import (QAction,
                                QApplication,
+                               QFileDialog,
+                               QWidget,
                                QListWidget,
                                QMainWindow,
                                QMenu,
                                QMessageBox,
                                QTableWidgetItem)
-from PySide2.QtCore import Qt
+from PySide2.QtCore import Qt, Signal
 
 from ui.main_window import Ui_MainWindow
+from ui.config_form import Ui_ConfigForm
+
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+FILEPATH = os.path.join(BASE_DIR, 'data.json')
+CONFIG_FILE = os.path.join(BASE_DIR, 'config.json')
 
 
 class JsonDb(dict):
@@ -34,6 +42,58 @@ class JsonDb(dict):
             json.dump(self, fl, indent=4, ensure_ascii=False)
 
 
+class ConfigForm(QWidget):
+
+    update_config = Signal()
+
+    def __init__(self):
+        super().__init__()
+        self.ui = Ui_ConfigForm()
+        self.ui.setupUi(self)
+
+        self.has_edited = False
+
+        # set gui icon
+        icon_path = os.path.join(BASE_DIR, 'static', 'folder.ico')
+        if os.path.exists(icon_path):
+            self.setWindowIcon(QIcon(icon_path))
+
+        # load config file
+        if os.path.exists(CONFIG_FILE):
+            self.config = JsonDb.from_json(CONFIG_FILE)
+        else:
+            self.config = JsonDb({})
+        sublime_text_path = self.config.get('sublime_text_path')
+        if sublime_text_path:
+            self.ui.lineEdit.setText(sublime_text_path)
+
+        self.ui.pushButton.clicked.connect(self.choose_sublime_text)
+        self.ui.pushButtonConfirm.clicked.connect(self.confirm)
+        self.ui.pushButtonCancel.clicked.connect(self.cancel)
+
+    def choose_sublime_text(self):
+        path, _ = QFileDialog.getOpenFileName(self,
+                                              '选择Sublime Text.exe程序',
+                                              None,
+                                              'Program (*.exe)')
+        if not path:
+            return
+        self.ui.lineEdit.setText(path)
+        self.config['sublime_text_path'] = path
+        self.has_edited = True
+
+    def cancel(self):
+        del self.config
+        self.has_edited = False
+        self.close()
+
+    def confirm(self):
+        self.config.save(CONFIG_FILE)
+        self.has_edited = False
+        self.update_config.emit()
+        self.close()
+
+
 class MainWindow(QMainWindow):
 
     def __init__(self):
@@ -42,23 +102,24 @@ class MainWindow(QMainWindow):
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
 
-        self.BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-        self.filepath = os.path.join(self.BASE_DIR, 'data.json')
-
         self.BASE_WINDOW_TITLE = self.windowTitle()
 
         # set gui icon
-        icon_path = os.path.join(self.BASE_DIR, 'static', 'folder.ico')
+        icon_path = os.path.join(BASE_DIR, 'static', 'folder.ico')
         if os.path.exists(icon_path):
             self.setWindowIcon(QIcon(icon_path))
 
         # set base data
-        if not os.path.exists(self.filepath):
+        if not os.path.exists(FILEPATH):
             self.data = JsonDb({'totalCount': 0, 'dataList': []})
         else:
-            self.data = JsonDb.from_json(self.filepath)
+            self.data = JsonDb.from_json(FILEPATH)
             self.data['totalCount'] = len(self.data['dataList'])
             self._load_list_data()
+        if os.path.exists(CONFIG_FILE):
+            self.config = JsonDb.from_json(CONFIG_FILE)
+        else:
+            self.config = JsonDb({})
 
         self.has_edited = False
         self.search_mode = False
@@ -191,7 +252,7 @@ class MainWindow(QMainWindow):
         self._clear_all_widgets()
         self.ui.lineEditSearch.setFocus()
         if reload:
-            self.data = JsonDb.from_json(self.filepath)
+            self.data = JsonDb.from_json(FILEPATH)
         if self.search_mode:
             self.search_mode = False
             self.data = self.data_backup
@@ -215,6 +276,7 @@ class MainWindow(QMainWindow):
         self.ui.moveDownButton.clicked.connect(self.move_down)
         self.ui.freshButton.clicked.connect(lambda: self.fresh())
         self.ui.saveButton.clicked.connect(self.save)
+        self.ui.configAction.triggered.connect(self.open_config_form)
 
     def left_click_event(self):
         current_row = self.ui.listWidget.currentRow()
@@ -270,6 +332,11 @@ class MainWindow(QMainWindow):
         self.ui.listWidget.setCurrentRow(self.data['totalCount'] - 1)
         self.set_has_edited(True)
 
+    def open_config_form(self):
+        self.config_form = ConfigForm()
+        self.config_form.update_config.connect(self.update_config)
+        self.config_form.show()
+
     def open_console_window(self):
         directory = self._get_selected_directory()
         if directory:
@@ -278,15 +345,21 @@ class MainWindow(QMainWindow):
 
     def open_with_sublime(self, flag):
         assert flag in ('file', 'path'), 'flag 必须为 file 或者 path'
-        SUBLIME_HOME = os.environ.get('SUBLIME_HOME')
-        if SUBLIME_HOME is None:
+        if flag not in ('file', 'path'):
+            return
+        sublime_text_path = self.config.get('sublime_text_path')
+        if sublime_text_path is None:
             QMessageBox.about(self,
                               '提示',
-                              '请设置环境变量SUBLIME_HOME,值为sublime text软件路径！')
+                              '请先在[首选项]里面配置sublime text路径。')
             return
+        if not os.path.exists(sublime_text_path):
+            QMessageBox.critical(self, '错误', f'[{sublime_text_path}]不存在！')
+            return
+        SUBLIME_HOME = os.path.dirname(sublime_text_path)
         path = self._get_selected_path()
         if not path:
-            QMessageBox.critical(self.ui, '错误', '路径不能为空值！')
+            QMessageBox.critical(self, '错误', '路径不能为空值！')
             return
         if not self._check_path_exists(path):
             return
@@ -295,7 +368,7 @@ class MainWindow(QMainWindow):
             if os.path.isfile(path):
                 target = path
             else:
-                QMessageBox.critical(self.ui, '错误', '目标是一个文件夹！')
+                QMessageBox.critical(self, '错误', '目标是一个文件夹！')
                 return
         elif flag == 'path':
             target = self._get_selected_directory()
@@ -303,7 +376,7 @@ class MainWindow(QMainWindow):
                 return
         command = f'sublime.exe "{target}"'
         os.system(command)
-        os.chdir(self.BASE_DIR)
+        os.chdir(BASE_DIR)
         # 为什么这种写法不起作用？明明在 Console 里面能正常执行的。
         # 是我考虑少了什么吗？
         # program = os.path.join(SUBLIME_HOME, 'sublime_text.exe')
@@ -330,7 +403,7 @@ class MainWindow(QMainWindow):
         """
         保存是对内存中的 self.data 进行保存。
         """
-        self.data.save(self.filepath)
+        self.data.save(FILEPATH)
         self.set_has_edited(False)
         QMessageBox.about(self, '提示', '\n   保存成功\t\n')
         # 保存成功后需要重载
@@ -362,6 +435,10 @@ class MainWindow(QMainWindow):
             self.setWindowTitle(self.BASE_WINDOW_TITLE + ' *')
         else:
             self.setWindowTitle(self.BASE_WINDOW_TITLE)
+
+    def update_config(self):
+        self.config = JsonDb.from_json(CONFIG_FILE)
+        self.config.pretty_print()
 
     def _change_button_status(self, *, mode):
         assert mode in ('enabled', 'disabled')
