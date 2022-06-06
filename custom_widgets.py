@@ -37,3 +37,4 @@ class CustomQTextEdit(QTextEdit):
     def focusOutEvent(self, event):
         if self.toPlainText() != self._base_data:
             self.editingFinished.emit()
+        super().focusOutEvent(event)
