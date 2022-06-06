@@ -376,7 +376,9 @@ class MainWindow(QMainWindow):
             if not target:
                 return
         command = f'{program_name} "{target}"'
-        os.system(command)
+        # https://stackoverflow.com/questions/7006238/how-do-i-hide-the-console-when-i-use-os-system-or-subprocess-call
+        DETACHED_PROCESS = 0x00000008
+        subprocess.call(command, creationflags=DETACHED_PROCESS)
         os.chdir(BASE_DIR)
         # 为什么这种写法不起作用？明明在 Console 里面能正常执行的。
         # 是我考虑少了什么吗？
