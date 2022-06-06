@@ -340,7 +340,7 @@ class MainWindow(QMainWindow):
     def open_console_window(self):
         directory = self._get_selected_directory()
         if directory:
-            command = f'start "Console" /D "{directory}"'
+            command = f'start /D "{directory}"'
             os.system(command)
 
     def open_with_sublime(self, flag):
@@ -364,7 +364,6 @@ class MainWindow(QMainWindow):
             return
         if not self._check_path_exists(path):
             return
-        os.chdir(SUBLIME_HOME)
         if flag == 'file':
             if os.path.isfile(path):
                 target = path
@@ -375,16 +374,7 @@ class MainWindow(QMainWindow):
             target = self._get_selected_directory()
             if not target:
                 return
-        command = f'{program_name} "{target}"'
-        # https://stackoverflow.com/questions/7006238/how-do-i-hide-the-console-when-i-use-os-system-or-subprocess-call
-        DETACHED_PROCESS = 0x00000008
-        subprocess.call(command, creationflags=DETACHED_PROCESS)
-        os.chdir(BASE_DIR)
-        # 为什么这种写法不起作用？明明在 Console 里面能正常执行的。
-        # 是我考虑少了什么吗？
-        # program = os.path.join(SUBLIME_HOME, 'sublime_text.exe')
-        # command = f'"{program}" "{directory}"'
-        # os.system(command)
+        subprocess.Popen([sublime_text_path, target])
 
     def open_selected_file(self):
         path = self._get_selected_path()
