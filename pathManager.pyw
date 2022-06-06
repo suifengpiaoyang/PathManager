@@ -102,6 +102,10 @@ class MainWindow(QMainWindow):
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
 
+        # 有关菜单栏 "关于" 的功能还没想好，暂时
+        # 将其隐藏
+        self.ui.menuAbout.setTitle('')
+
         self.BASE_WINDOW_TITLE = self.windowTitle()
 
         # set gui icon
