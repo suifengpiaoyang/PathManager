@@ -276,24 +276,39 @@ class MainWindow(QMainWindow):
             command = f'start "Console" /D "{directory}"'
             os.system(command)
 
-    def open_path_through_sublime(self):
+    def open_with_sublime(self, flag):
+        assert flag in ('file', 'path'), 'flag 必须为 file 或者 path'
         SUBLIME_HOME = os.environ.get('SUBLIME_HOME')
         if SUBLIME_HOME is None:
             QMessageBox.about(self,
                               '提示',
                               '请设置环境变量SUBLIME_HOME,值为sublime text软件路径！')
             return
-        directory = self._get_selected_directory()
-        if directory:
-            os.chdir(SUBLIME_HOME)
-            command = f'sublime.exe "{directory}"'
-            os.system(command)
-            os.chdir(self.BASE_DIR)
-            # 为什么这种写法不起作用？明明在 Console 里面能正常执行的。
-            # 是我考虑少了什么吗？
-            # program = os.path.join(SUBLIME_HOME, 'sublime_text.exe')
-            # command = f'"{program}" "{directory}"'
-            # os.system(command)
+        path = self._get_selected_path()
+        if not path:
+            QMessageBox.critical(self.ui, '错误', '路径不能为空值！')
+            return
+        if not self._check_path_exists(path):
+            return
+        os.chdir(SUBLIME_HOME)
+        if flag == 'file':
+            if os.path.isfile(path):
+                target = path
+            else:
+                QMessageBox.critical(self.ui, '错误', '目标是一个文件夹！')
+                return
+        elif flag == 'path':
+            target = self._get_selected_directory()
+            if not target:
+                return
+        command = f'sublime.exe "{target}"'
+        os.system(command)
+        os.chdir(self.BASE_DIR)
+        # 为什么这种写法不起作用？明明在 Console 里面能正常执行的。
+        # 是我考虑少了什么吗？
+        # program = os.path.join(SUBLIME_HOME, 'sublime_text.exe')
+        # command = f'"{program}" "{directory}"'
+        # os.system(command)
 
     def open_selected_file(self):
         path = self._get_selected_path()
@@ -441,19 +456,24 @@ class MainWindow(QMainWindow):
         self.left_click_event()
         open_selected_path = QAction('打开目标路径')
         open_console_window = QAction('打开console窗口')
-        open_path_through_sublime = QAction('使用sublime text打开文件夹')
+        open_file_with_sublime = QAction('使用sublime text打开文件')
+        open_path_with_sublime = QAction('使用sublime text打开文件夹')
         open_selected_file = QAction('打开目标文件(同双击)')
 
         open_selected_path.triggered.connect(self.open_selected_directory)
         open_console_window.triggered.connect(self.open_console_window)
-        open_path_through_sublime.triggered.connect(
-            self.open_path_through_sublime)
+        open_file_with_sublime.triggered.connect(
+            lambda: self.open_with_sublime(flag='file'))
+        open_path_with_sublime.triggered.connect(
+            lambda: self.open_with_sublime(flag='path'))
         open_selected_file.triggered.connect(self.open_selected_file)
 
         menu = QMenu(self.ui.listWidget)
         menu.addAction(open_selected_path)
         menu.addAction(open_console_window)
-        menu.addAction(open_path_through_sublime)
+        menu.addSeparator()
+        menu.addAction(open_file_with_sublime)
+        menu.addAction(open_path_with_sublime)
         menu.addSeparator()
         menu.addAction(open_selected_file)
         menu.exec_(self.ui.listWidget.mapToGlobal(position))
