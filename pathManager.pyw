@@ -386,7 +386,7 @@ class MainWindow(QMainWindow):
             return
         if path.startswith('http'):
             webbrowser.open(path)
-        elif path.startswith('ftp'):
+        elif path.startswith(('ftp', r'\\')):
             subprocess.Popen(['explorer.exe', path])
         elif self._check_path_exists(path):
             os.startfile(path)
