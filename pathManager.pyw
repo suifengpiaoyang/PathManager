@@ -125,6 +125,11 @@ class MainWindow(QMainWindow):
         else:
             self.config = JsonDb({})
 
+        width = self.config.get('width')
+        height = self.config.get('height')
+        if width and height:
+            self.resize(width, height)
+
         self.has_edited = False
         self.search_mode = False
 
@@ -148,6 +153,11 @@ class MainWindow(QMainWindow):
             self._show_context_menu)
 
     def closeEvent(self, event):
+        # 保存最后关闭时窗口的大小
+        self.config['width'] = self.width()
+        self.config['height'] = self.height()
+        self.config.save(CONFIG_FILE)
+
         if self.has_edited:
             flag = QMessageBox.warning(self,
                                        '警告',
