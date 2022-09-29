@@ -399,7 +399,14 @@ class MainWindow(QMainWindow):
         elif path.startswith(('ftp', r'\\')):
             subprocess.Popen(['explorer.exe', path])
         elif self._check_path_exists(path):
+            # 运行时切换到目标路径下。
+            # 曾经出现过目标程序读取配置文件时使用 config.json
+            # 的配置文件，但是却错误地读取到该程序下的配置文件导致
+            # 程序崩溃。添加部分代码来规避这种情况的出现。
+            directory_path = os.path.dirname(path)
+            os.chdir(directory_path)
             os.startfile(path)
+            os.chdir(BASE_DIR)
 
     def open_selected_directory(self):
         directory = self._get_selected_directory()
