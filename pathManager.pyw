@@ -196,6 +196,18 @@ class MainWindow(QMainWindow):
     def double_click_event(self):
         self.open_selected_file()
 
+    def drag_drop(self, startrow, endrow):
+        if self.search_mode:
+            QMessageBox.about(self, '提示', '搜索状态下不支持拖动。')
+            return
+        self.set_has_edited(True)
+        pop_dict = self.data['dataList'].pop(startrow)
+        self.data['dataList'].insert(endrow, pop_dict)
+        self.fresh(reload=False, show_pop_box=False)
+        self.ui.lineEditName.setText(self.data['dataList'][-1]['name'])
+        self.ui.textEditPath.append(self.data['dataList'][-1]['path'])
+        self.ui.listWidget.setCurrentRow(endrow)
+
     def drop_add_item(self, urllist):
         if self.search_mode:
             QMessageBox.about(self, '提示', '搜索状态下不支持拖动。')
@@ -279,6 +291,7 @@ class MainWindow(QMainWindow):
         self.ui.listWidget.clicked.connect(self.left_click_event)
         self.ui.listWidget.itemDoubleClicked.connect(self.double_click_event)
         self.ui.listWidget.dropMessage.connect(self.drop_add_item)
+        self.ui.listWidget.dragDropSignal.connect(self.drag_drop)
         self.ui.lineEditName.editingFinished.connect(self.finished_edit_name)
         self.ui.textEditPath.editingFinished.connect(self.finished_edit_path)
         self.ui.textEditComment.editingFinished.connect(
