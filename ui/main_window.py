@@ -20,7 +20,7 @@ class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         if not MainWindow.objectName():
             MainWindow.setObjectName(u"MainWindow")
-        MainWindow.resize(817, 580)
+        MainWindow.resize(541, 402)
         font = QFont()
         font.setPointSize(13)
         MainWindow.setFont(font)
@@ -98,41 +98,47 @@ class Ui_MainWindow(object):
         self.horizontalLayout_2.setContentsMargins(0, 5, 0, 5)
         self.addButton = QPushButton(self.frame_3)
         self.addButton.setObjectName(u"addButton")
+        sizePolicy = QSizePolicy(QSizePolicy.Minimum, QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.addButton.sizePolicy().hasHeightForWidth())
+        self.addButton.setSizePolicy(sizePolicy)
 
         self.horizontalLayout_2.addWidget(self.addButton)
 
         self.deleteButton = QPushButton(self.frame_3)
         self.deleteButton.setObjectName(u"deleteButton")
+        sizePolicy.setHeightForWidth(self.deleteButton.sizePolicy().hasHeightForWidth())
+        self.deleteButton.setSizePolicy(sizePolicy)
 
         self.horizontalLayout_2.addWidget(self.deleteButton)
 
         self.moveFirstButton = QPushButton(self.frame_3)
         self.moveFirstButton.setObjectName(u"moveFirstButton")
+        sizePolicy.setHeightForWidth(self.moveFirstButton.sizePolicy().hasHeightForWidth())
+        self.moveFirstButton.setSizePolicy(sizePolicy)
 
         self.horizontalLayout_2.addWidget(self.moveFirstButton)
 
-        self.moveUpButton = QPushButton(self.frame_3)
-        self.moveUpButton.setObjectName(u"moveUpButton")
-
-        self.horizontalLayout_2.addWidget(self.moveUpButton)
-
-        self.moveDownButton = QPushButton(self.frame_3)
-        self.moveDownButton.setObjectName(u"moveDownButton")
-
-        self.horizontalLayout_2.addWidget(self.moveDownButton)
-
         self.moveLastButton = QPushButton(self.frame_3)
         self.moveLastButton.setObjectName(u"moveLastButton")
+        sizePolicy.setHeightForWidth(self.moveLastButton.sizePolicy().hasHeightForWidth())
+        self.moveLastButton.setSizePolicy(sizePolicy)
+        self.moveLastButton.setMinimumSize(QSize(0, 0))
 
         self.horizontalLayout_2.addWidget(self.moveLastButton)
 
         self.freshButton = QPushButton(self.frame_3)
         self.freshButton.setObjectName(u"freshButton")
+        sizePolicy.setHeightForWidth(self.freshButton.sizePolicy().hasHeightForWidth())
+        self.freshButton.setSizePolicy(sizePolicy)
 
         self.horizontalLayout_2.addWidget(self.freshButton)
 
         self.saveButton = QPushButton(self.frame_3)
         self.saveButton.setObjectName(u"saveButton")
+        sizePolicy.setHeightForWidth(self.saveButton.sizePolicy().hasHeightForWidth())
+        self.saveButton.setSizePolicy(sizePolicy)
 
         self.horizontalLayout_2.addWidget(self.saveButton)
 
@@ -142,7 +148,7 @@ class Ui_MainWindow(object):
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QMenuBar(MainWindow)
         self.menubar.setObjectName(u"menubar")
-        self.menubar.setGeometry(QRect(0, 0, 817, 30))
+        self.menubar.setGeometry(QRect(0, 0, 541, 26))
         font2 = QFont()
         font2.setPointSize(11)
         self.menubar.setFont(font2)
@@ -174,8 +180,6 @@ class Ui_MainWindow(object):
         self.addButton.setText(QCoreApplication.translate("MainWindow", u"\u6dfb\u52a0", None))
         self.deleteButton.setText(QCoreApplication.translate("MainWindow", u"\u5220\u9664", None))
         self.moveFirstButton.setText(QCoreApplication.translate("MainWindow", u"\u79fb\u5230\u6700\u524d", None))
-        self.moveUpButton.setText(QCoreApplication.translate("MainWindow", u"\u4e0a\u79fb", None))
-        self.moveDownButton.setText(QCoreApplication.translate("MainWindow", u"\u4e0b\u79fb", None))
         self.moveLastButton.setText(QCoreApplication.translate("MainWindow", u"\u79fb\u5230\u6700\u540e", None))
         self.freshButton.setText(QCoreApplication.translate("MainWindow", u"\u5237\u65b0", None))
         self.saveButton.setText(QCoreApplication.translate("MainWindow", u"\u4fdd\u5b58", None))

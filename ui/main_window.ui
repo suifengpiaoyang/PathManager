@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>817</width>
-    <height>580</height>
+    <width>541</width>
+    <height>402</height>
    </rect>
   </property>
   <property name="font">
@@ -146,6 +146,12 @@
        </property>
        <item>
         <widget class="QPushButton" name="addButton">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
          <property name="text">
           <string>添加</string>
          </property>
@@ -153,6 +159,12 @@
        </item>
        <item>
         <widget class="QPushButton" name="deleteButton">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
          <property name="text">
           <string>删除</string>
          </property>
@@ -160,27 +172,31 @@
        </item>
        <item>
         <widget class="QPushButton" name="moveFirstButton">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
          <property name="text">
           <string>移到最前</string>
          </property>
         </widget>
        </item>
        <item>
-        <widget class="QPushButton" name="moveUpButton">
-         <property name="text">
-          <string>上移</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QPushButton" name="moveDownButton">
-         <property name="text">
-          <string>下移</string>
-         </property>
-        </widget>
-       </item>
-       <item>
         <widget class="QPushButton" name="moveLastButton">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>0</height>
+          </size>
+         </property>
          <property name="text">
           <string>移到最后</string>
          </property>
@@ -188,6 +204,12 @@
        </item>
        <item>
         <widget class="QPushButton" name="freshButton">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
          <property name="text">
           <string>刷新</string>
          </property>
@@ -195,6 +217,12 @@
        </item>
        <item>
         <widget class="QPushButton" name="saveButton">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
          <property name="text">
           <string>保存</string>
          </property>
@@ -210,8 +238,8 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>817</width>
-     <height>30</height>
+     <width>541</width>
+     <height>26</height>
     </rect>
    </property>
    <property name="font">

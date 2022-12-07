@@ -299,8 +299,6 @@ class MainWindow(QMainWindow):
         self.ui.lineEditSearch.returnPressed.connect(self.search)
         self.ui.moveFirstButton.clicked.connect(self.move_first)
         self.ui.moveLastButton.clicked.connect(self.move_last)
-        self.ui.moveUpButton.clicked.connect(self.move_up)
-        self.ui.moveDownButton.clicked.connect(self.move_down)
         self.ui.freshButton.clicked.connect(lambda: self.fresh())
         self.ui.saveButton.clicked.connect(self.save)
         self.ui.configAction.triggered.connect(self.open_config_form)
@@ -322,30 +320,6 @@ class MainWindow(QMainWindow):
         self.ui.listWidget.clear()
         self._load_list_data()
         self.ui.listWidget.setCurrentRow(0)
-        self.set_has_edited(True)
-
-    def move_up(self):
-        current_row = self.ui.listWidget.currentRow()
-        if current_row <= 0 or current_row >= self.data['totalCount']:
-            return
-        data = self.data['dataList'].pop(current_row)
-        self.data['dataList'].insert(current_row - 1, data)
-        self.ui.listWidget.clear()
-        self._load_list_data()
-        self.ui.listWidget.setCurrentRow(current_row - 1)
-        self.set_has_edited(True)
-
-    def move_down(self):
-        current_row = self.ui.listWidget.currentRow()
-        if current_row < 0 or current_row >= self.data['totalCount']:
-            return
-        if current_row == self.data['totalCount'] - 1:
-            return
-        data = self.data['dataList'].pop(current_row)
-        self.data['dataList'].insert(current_row + 1, data)
-        self.ui.listWidget.clear()
-        self._load_list_data()
-        self.ui.listWidget.setCurrentRow(current_row + 1)
         self.set_has_edited(True)
 
     def move_last(self):
