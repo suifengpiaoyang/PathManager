@@ -444,8 +444,7 @@ class MainWindow(QMainWindow):
     def _change_button_status(self, *, mode):
         assert mode in ('enabled', 'disabled')
         button_list = [self.ui.addButton, self.ui.deleteButton,
-                       self.ui.moveDownButton, self.ui.moveFirstButton,
-                       self.ui.moveUpButton, self.ui.moveLastButton,
+                       self.ui.moveFirstButton, self.ui.moveLastButton,
                        self.ui.saveButton]
         if mode == 'disabled':
             for button in button_list:
