@@ -3,6 +3,7 @@ import re
 import sys
 import json
 import hashlib
+import platform
 import subprocess
 import webbrowser
 from PySide2.QtGui import QIcon
@@ -25,6 +26,25 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 FILEPATH = os.path.join(BASE_DIR, 'data.json')
 CONFIG_FILE = os.path.join(BASE_DIR, 'config.json')
 
+
+system = platform.system()
+
+if system == "Windows":
+    # 本来为了一致是应该这么编写的，但是为了可以使点击时打开浏览器
+    # 暂时先以 os.startfile 使用了。
+    # opener = 'explorer'
+    # openfunc = lambda path: subprocess.call([opener, path])
+    openfunc = os.startfile
+    open_console_cmd = lambda directory: f'start /D "{directory}"'
+elif system == "Linux":
+    opener = "xdg-open"
+    openfunc = lambda path: subprocess.call([opener, path])
+    open_console_cmd = lambda directory: f'gnome-terminal --working-directory="{directory}"'
+elif system == "Darwin":
+    # 没有苹果电脑，无法测试
+    raise ValueError('Not supported this system at the moment!')
+else:
+    raise ValueError('Not supported this system at the moment!')
 
 class JsonDb(dict):
 
@@ -341,7 +361,7 @@ class MainWindow(QMainWindow):
     def open_console_window(self):
         directory = self._get_selected_directory()
         if directory:
-            command = f'start /D "{directory}"'
+            command = open_console_cmd(directory)
             os.system(command)
 
     def open_with_sublime(self, flag):
@@ -384,7 +404,10 @@ class MainWindow(QMainWindow):
         if path.startswith('http'):
             webbrowser.open(path)
         elif path.startswith(('ftp', r'\\')):
-            subprocess.Popen(['explorer.exe', path])
+            if system == 'Windows':
+                subprocess.Popen(['explorer.exe', path])
+            else:
+                QMessageBox.about(self, '提示', 'Linux 下此功能善未进行测试。')
         elif self._check_path_exists(path):
             # 运行时切换到目标路径下。
             # 曾经出现过目标程序读取配置文件时使用 config.json
@@ -392,13 +415,13 @@ class MainWindow(QMainWindow):
             # 程序崩溃。添加部分代码来规避这种情况的出现。
             directory_path = os.path.dirname(path)
             os.chdir(directory_path)
-            os.startfile(path)
+            openfunc(path)
             os.chdir(BASE_DIR)
 
     def open_selected_directory(self):
         directory = self._get_selected_directory()
         if directory:
-            os.startfile(directory)
+            openfunc(directory)
 
     def save(self, flash_flag=True):
         """
