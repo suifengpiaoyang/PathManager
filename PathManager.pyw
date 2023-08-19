@@ -396,9 +396,23 @@ class MainWindow(QMainWindow):
             os.chdir(BASE_DIR)
 
     def open_selected_directory(self):
-        directory = self._get_selected_directory()
-        if directory:
-            os.startfile(directory)
+        """
+        可通过 Windows 特有的方式，除了打开文件夹之外，
+        直接定位到目标文件。
+        """
+        path = self._get_selected_path()
+        if not path:
+            return
+        if os.path.isdir(path):
+            os.startfile(path)
+        elif os.path.isfile(path):
+            path = path.replace('/', '\\')
+            directory = os.path.dirname(path)
+            subprocess.Popen(rf'explorer /select,"{path}"')
+        else:
+            QMessageBox.about(self,
+                              '提示',
+                              '该路径不是文件或者文件夹，无法使用此方式打开。')
 
     def save(self, flash_flag=True):
         """
