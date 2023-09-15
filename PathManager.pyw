@@ -1,7 +1,6 @@
 import os
 import re
 import sys
-import json
 import hashlib
 import subprocess
 import webbrowser
@@ -19,27 +18,12 @@ from PySide2.QtCore import Qt, Signal
 
 from ui.main_window import Ui_MainWindow
 from ui.config_form import Ui_ConfigForm
+from data_storage import ConfigStorage, DataStorage
 
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 FILEPATH = os.path.join(BASE_DIR, 'data.json')
 CONFIG_FILE = os.path.join(BASE_DIR, 'config.json')
-
-
-class JsonDb(dict):
-
-    @classmethod
-    def from_json(cls, file):
-        with open(file, 'r', encoding='utf-8')as fl:
-            data = json.load(fl)
-        return cls(data)
-
-    def pretty_print(self):
-        print(json.dumps(self, indent=4, ensure_ascii=False))
-
-    def save(self, file):
-        with open(file, 'w', encoding='utf-8')as fl:
-            json.dump(self, fl, indent=4, ensure_ascii=False)
 
 
 class ConfigForm(QWidget):
@@ -59,14 +43,12 @@ class ConfigForm(QWidget):
             self.setWindowIcon(QIcon(icon_path))
 
         # load config file
-        if os.path.exists(CONFIG_FILE):
-            self.config = JsonDb.from_json(CONFIG_FILE)
-        else:
-            self.config = JsonDb({})
+        self.config = ConfigStorage.from_json(CONFIG_FILE)
         sublime_text_path = self.config.get('sublime_text_path')
         if sublime_text_path:
             self.ui.lineEdit.setText(sublime_text_path)
 
+        # connect slots
         self.ui.pushButton.clicked.connect(self.choose_sublime_text)
         self.ui.pushButtonConfirm.clicked.connect(self.confirm)
         self.ui.pushButtonCancel.clicked.connect(self.cancel)
@@ -114,17 +96,11 @@ class MainWindow(QMainWindow):
             self.setWindowIcon(QIcon(icon_path))
 
         # set base data
-        if not os.path.exists(FILEPATH):
-            self.data = JsonDb({'totalCount': 0, 'dataList': []})
-        else:
-            self.data = JsonDb.from_json(FILEPATH)
-            self.data['totalCount'] = len(self.data['dataList'])
-            self._load_list_data()
-        if os.path.exists(CONFIG_FILE):
-            self.config = JsonDb.from_json(CONFIG_FILE)
-        else:
-            self.config = JsonDb({})
+        self.data = DataStorage.from_json(FILEPATH)
+        self.config = ConfigStorage.from_json(CONFIG_FILE)
+        self._load_list_data()
 
+        # set gui size
         width = self.config.get('width')
         height = self.config.get('height')
         if width and height:
@@ -136,13 +112,12 @@ class MainWindow(QMainWindow):
         self.add_context_menu()
         self.handle_slots()
 
-    def add_item(self):
+    def add_empty_item(self):
 
         row_count = self.ui.listWidget.count()
         self.ui.listWidget.addItem('未命名')
         self._clear_input_widgets()
-        self.data['dataList'].append({'name': '', 'path': '', 'comment': ''})
-        self.data['totalCount'] += 1
+        self.data.add_empty_item()
         self.set_has_edited(True)
         self.ui.lineEditName.setFocus()
         self.ui.listWidget.setCurrentRow(row_count)
@@ -153,7 +128,7 @@ class MainWindow(QMainWindow):
             self._show_context_menu)
 
     def closeEvent(self, event):
-        # 保存最后关闭时窗口的大小
+        # save the gui size when the gui closed
         self.config['width'] = self.width()
         self.config['height'] = self.height()
         self.config.save(CONFIG_FILE)
@@ -185,10 +160,7 @@ class MainWindow(QMainWindow):
             return
         self.set_has_edited(True)
         self.ui.listWidget.takeItem(current_row)
-        self.data['dataList'].pop(current_row)
-        self.data['totalCount'] -= 1
-        # totalCount 是否还需要，这个函数里其实是不需要
-        # 这个参数的。
+        self.data.delete_item(current_row)
         self._clear_input_widgets()
         current_row = self.ui.listWidget.currentRow()
         self._show_row_data(current_row)
@@ -196,37 +168,17 @@ class MainWindow(QMainWindow):
     def double_click_event(self):
         self.open_selected_file()
 
-    def drag_drop(self, startrow, endrow):
+    def handle_drop_items(self, urlist):
         if self.search_mode:
             QMessageBox.about(self, '提示', '搜索状态下不支持拖动。')
             return
         self.set_has_edited(True)
-        pop_dict = self.data['dataList'].pop(startrow)
-        self.data['dataList'].insert(endrow, pop_dict)
+        self.data.handle_drop_items(urlist)
         self.fresh(reload=False, show_pop_box=False)
-        self.ui.lineEditName.setText(self.data['dataList'][-1]['name'])
-        self.ui.textEditPath.append(self.data['dataList'][-1]['path'])
-        self.ui.listWidget.setCurrentRow(endrow)
-
-    def drop_add_item(self, urllist):
-        if self.search_mode:
-            QMessageBox.about(self, '提示', '搜索状态下不支持拖动。')
-            return
-        self.set_has_edited(True)
-        for QUrl in urllist:
-            path = QUrl.toLocalFile()
-            row_count = self.ui.listWidget.count()
-            basename = os.path.basename(path)
-            datalist = {
-                'name': basename,
-                'path': path
-            }
-            self.data['dataList'].append(datalist)
-            self.data['totalCount'] += 1
-        self.fresh(reload=False, show_pop_box=False)
-        self.ui.lineEditName.setText(self.data['dataList'][-1]['name'])
-        self.ui.textEditPath.append(self.data['dataList'][-1]['path'])
-        self.ui.listWidget.setCurrentRow(self.data['totalCount'] - 1)
+        last_item = self.data.get_data_from_index(-1)
+        self.ui.lineEditName.setText(last_item['name'])
+        self.ui.textEditPath.append(last_item['path'])
+        self.ui.listWidget.setCurrentRow(self.data.total_count - 1)
 
     def finished_edit_name(self):
         # 目前的搜索模式不支持修改数据
@@ -278,7 +230,7 @@ class MainWindow(QMainWindow):
         self._clear_all_widgets()
         self.ui.lineEditSearch.setFocus()
         if reload:
-            self.data = JsonDb.from_json(FILEPATH)
+            self.data = DataStorage.from_json(FILEPATH)
         if self.search_mode:
             self.search_mode = False
             self.data = self.data_backup
@@ -286,12 +238,12 @@ class MainWindow(QMainWindow):
         self._load_list_data()
 
     def handle_slots(self):
-        self.ui.addButton.clicked.connect(self.add_item)
+        self.ui.addButton.clicked.connect(self.add_empty_item)
         self.ui.deleteButton.clicked.connect(self.delete_item)
         self.ui.listWidget.clicked.connect(self.left_click_event)
         self.ui.listWidget.itemDoubleClicked.connect(self.double_click_event)
-        self.ui.listWidget.dropMessage.connect(self.drop_add_item)
-        self.ui.listWidget.dragDropSignal.connect(self.drag_drop)
+        self.ui.listWidget.dropMessage.connect(self.handle_drop_items)
+        self.ui.listWidget.dragDropSignal.connect(self.move_row)
         self.ui.lineEditName.editingFinished.connect(self.finished_edit_name)
         self.ui.textEditPath.editingFinished.connect(self.finished_edit_path)
         self.ui.textEditComment.editingFinished.connect(
@@ -305,18 +257,13 @@ class MainWindow(QMainWindow):
 
     def left_click_event(self):
         current_row = self.ui.listWidget.currentRow()
-
-        # 检测有没有数据发生更改
-
-        # 当前数据显示
         self._show_row_data(current_row)
 
     def move_first(self):
         current_row = self.ui.listWidget.currentRow()
-        if current_row < 0 or current_row >= self.data['totalCount']:
+        if current_row < 0 or current_row >= self.data.total_count:
             return
-        data = self.data['dataList'].pop(current_row)
-        self.data['dataList'].insert(0, data)
+        self.data.move_first(current_row)
         self.ui.listWidget.clear()
         self._load_list_data()
         self.ui.listWidget.setCurrentRow(0)
@@ -324,14 +271,25 @@ class MainWindow(QMainWindow):
 
     def move_last(self):
         current_row = self.ui.listWidget.currentRow()
-        if current_row < 0 or current_row >= self.data['totalCount']:
+        if current_row < 0 or current_row >= self.data.total_count:
             return
-        data = self.data['dataList'].pop(current_row)
-        self.data['dataList'].append(data)
+        self.data.move_last(current_row)
         self.ui.listWidget.clear()
         self._load_list_data()
-        self.ui.listWidget.setCurrentRow(self.data['totalCount'] - 1)
+        self.ui.listWidget.setCurrentRow(self.data.total_count - 1)
         self.set_has_edited(True)
+
+    def move_row(self, startrow, endrow):
+        if self.search_mode:
+            QMessageBox.about(self, '提示', '搜索状态下不支持拖动。')
+            return
+        self.set_has_edited(True)
+        current_data = self.data.get_data_from_index(startrow)
+        self.data.move_row(startrow, endrow)
+        self.fresh(reload=False, show_pop_box=False)
+        self.ui.lineEditName.setText(current_data['name'])
+        self.ui.textEditPath.append(current_data['path'])
+        self.ui.listWidget.setCurrentRow(endrow)
 
     def open_config_form(self):
         self.config_form = ConfigForm()
@@ -433,7 +391,7 @@ class MainWindow(QMainWindow):
         if not self.search_mode:
             self.data_backup = self.data
         self.ui.listWidget.clear()
-        search_result = JsonDb({'dataList': [], 'totalCount': 0})
+        search_result = DataStorage({'dataList': [], 'totalCount': 0})
         for index, item in enumerate(self.data_backup['dataList']):
             check_message = ''.join(item.values())
             if re.search(r'{}'.format(flag), check_message, re.I):
@@ -452,7 +410,7 @@ class MainWindow(QMainWindow):
             self.setWindowTitle(self.BASE_WINDOW_TITLE)
 
     def update_config(self):
-        self.config = JsonDb.from_json(CONFIG_FILE)
+        self.config = ConfigStorage.from_json(CONFIG_FILE)
         self.config.pretty_print()
 
     def _change_button_status(self, *, mode):
@@ -495,8 +453,8 @@ class MainWindow(QMainWindow):
     def _get_row_data(self, row):
         """Get one row data from self.data.
         """
-        if row >= 0 and row < self.data['totalCount']:
-            current_data = self.data['dataList'][row]
+        if row >= 0 and row < self.data.total_count:
+            current_data = self.data.get_data_from_index(row)
         else:
             current_data = {}
         name = current_data.get('name')
@@ -532,7 +490,7 @@ class MainWindow(QMainWindow):
 
     def _load_list_data(self):
         row = 0
-        while row < self.data['totalCount']:
+        while row < self.data.total_count:
             for item in self.data['dataList']:
                 self.ui.listWidget.addItem(item['name'])
                 row += 1
