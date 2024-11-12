@@ -4,17 +4,18 @@ import sys
 import hashlib
 import subprocess
 import webbrowser
-from PySide2.QtGui import QIcon
-from PySide2.QtWidgets import (QAction,
-                               QApplication,
-                               QFileDialog,
-                               QWidget,
-                               QListWidget,
-                               QMainWindow,
-                               QMenu,
-                               QMessageBox,
-                               QTableWidgetItem)
-from PySide2.QtCore import Qt, Signal
+from PySide6.QtGui import QIcon, QAction
+from PySide6.QtWidgets import (
+    QApplication,
+    QFileDialog,
+    QWidget,
+    QListWidget,
+    QMainWindow,
+    QMenu,
+    QMessageBox,
+    QTableWidgetItem
+)
+from PySide6.QtCore import Qt, Signal
 
 from ui.main_window import Ui_MainWindow
 from ui.config_form import Ui_ConfigForm
@@ -24,6 +25,10 @@ from data_storage import ConfigStorage, DataStorage
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 FILEPATH = os.path.join(BASE_DIR, 'data.json')
 CONFIG_FILE = os.path.join(BASE_DIR, 'config.json')
+
+# 系统暂时不区分太细，后续有需要再编写详细的代码
+# 现在主要是为了在选择 sublime text 程序时可以在 macOS 上或者 Linux 上使用。
+OS = 'Windows' if os.name == 'nt' else 'Others'
 
 
 class ConfigForm(QWidget):
@@ -54,10 +59,13 @@ class ConfigForm(QWidget):
         self.ui.pushButtonCancel.clicked.connect(self.cancel)
 
     def choose_sublime_text(self):
-        path, _ = QFileDialog.getOpenFileName(self,
-                                              '选择Sublime Text.exe程序',
-                                              None,
-                                              'Program (*.exe)')
+        help_text = 'Program (*.exe)' if OS == 'Windows' else 'Program'
+        path, _ = QFileDialog.getOpenFileName(
+            self,
+            '选择Sublime Text程序',
+            None,
+            help_text
+        )
         if not path:
             return
         self.ui.lineEdit.setText(path)
@@ -342,7 +350,8 @@ class MainWindow(QMainWindow):
         if path.startswith('http'):
             webbrowser.open(path)
         elif path.startswith(('ftp', r'\\')):
-            subprocess.Popen(['explorer.exe', path])
+            if OS == 'Windows':
+                subprocess.Popen(['explorer.exe', path])
         elif self._check_path_exists(path):
             # 运行时切换到目标路径下。
             # 曾经出现过目标程序读取配置文件时使用 config.json
@@ -541,4 +550,4 @@ if __name__ == '__main__':
     app = QApplication(sys.argv)
     window = MainWindow()
     window.show()
-    sys.exit(app.exec_())
+    sys.exit(app.exec())

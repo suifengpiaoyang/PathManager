@@ -3,29 +3,39 @@
 ################################################################################
 ## Form generated from reading UI file 'main_window.ui'
 ##
-## Created by: Qt User Interface Compiler version 5.15.2
+## Created by: Qt User Interface Compiler version 6.8.0
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
 
-from PySide2.QtCore import *
-from PySide2.QtGui import *
-from PySide2.QtWidgets import *
+from PySide6.QtCore import (QCoreApplication, QDate, QDateTime, QLocale,
+    QMetaObject, QObject, QPoint, QRect,
+    QSize, QTime, QUrl, Qt)
+from PySide6.QtGui import (QAction, QBrush, QColor, QConicalGradient,
+    QCursor, QFont, QFontDatabase, QGradient,
+    QIcon, QImage, QKeySequence, QLinearGradient,
+    QPainter, QPalette, QPixmap, QRadialGradient,
+    QTransform)
+from PySide6.QtWidgets import (QAbstractItemView, QApplication, QFrame, QHBoxLayout,
+    QLineEdit, QListWidgetItem, QMainWindow, QMenu,
+    QMenuBar, QPushButton, QSizePolicy, QVBoxLayout,
+    QWidget)
 
-from custom_widgets import CustomQListWidget
-from custom_widgets import CustomQTextEdit
-
+from custom_widgets import (CustomQListWidget, CustomQTextEdit)
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         if not MainWindow.objectName():
             MainWindow.setObjectName(u"MainWindow")
-        MainWindow.resize(541, 402)
+        MainWindow.resize(515, 383)
         font = QFont()
         font.setPointSize(13)
         MainWindow.setFont(font)
         self.configAction = QAction(MainWindow)
         self.configAction.setObjectName(u"configAction")
+        font1 = QFont()
+        font1.setFamilies([u"Microsoft YaHei UI"])
+        self.configAction.setFont(font1)
         self.centralwidget = QWidget(MainWindow)
         self.centralwidget.setObjectName(u"centralwidget")
         self.verticalLayout_3 = QVBoxLayout(self.centralwidget)
@@ -34,8 +44,8 @@ class Ui_MainWindow(object):
         self.horizontalLayout.setObjectName(u"horizontalLayout")
         self.frame = QFrame(self.centralwidget)
         self.frame.setObjectName(u"frame")
-        self.frame.setFrameShape(QFrame.StyledPanel)
-        self.frame.setFrameShadow(QFrame.Raised)
+        self.frame.setFrameShape(QFrame.Shape.StyledPanel)
+        self.frame.setFrameShadow(QFrame.Shadow.Raised)
         self.verticalLayout = QVBoxLayout(self.frame)
         self.verticalLayout.setObjectName(u"verticalLayout")
         self.verticalLayout.setContentsMargins(0, 0, 0, 0)
@@ -49,7 +59,7 @@ class Ui_MainWindow(object):
         self.listWidget.setFont(font)
         self.listWidget.setAcceptDrops(True)
         self.listWidget.setDragDropOverwriteMode(False)
-        self.listWidget.setDragDropMode(QAbstractItemView.DragDrop)
+        self.listWidget.setDragDropMode(QAbstractItemView.DragDropMode.DragDrop)
 
         self.verticalLayout.addWidget(self.listWidget)
 
@@ -58,8 +68,8 @@ class Ui_MainWindow(object):
 
         self.frame_2 = QFrame(self.centralwidget)
         self.frame_2.setObjectName(u"frame_2")
-        self.frame_2.setFrameShape(QFrame.StyledPanel)
-        self.frame_2.setFrameShadow(QFrame.Raised)
+        self.frame_2.setFrameShape(QFrame.Shape.StyledPanel)
+        self.frame_2.setFrameShadow(QFrame.Shadow.Raised)
         self.verticalLayout_2 = QVBoxLayout(self.frame_2)
         self.verticalLayout_2.setObjectName(u"verticalLayout_2")
         self.verticalLayout_2.setContentsMargins(0, 0, 0, 0)
@@ -88,17 +98,17 @@ class Ui_MainWindow(object):
 
         self.frame_3 = QFrame(self.centralwidget)
         self.frame_3.setObjectName(u"frame_3")
-        font1 = QFont()
-        font1.setPointSize(12)
-        self.frame_3.setFont(font1)
-        self.frame_3.setFrameShape(QFrame.StyledPanel)
-        self.frame_3.setFrameShadow(QFrame.Raised)
+        font2 = QFont()
+        font2.setPointSize(12)
+        self.frame_3.setFont(font2)
+        self.frame_3.setFrameShape(QFrame.Shape.StyledPanel)
+        self.frame_3.setFrameShadow(QFrame.Shadow.Raised)
         self.horizontalLayout_2 = QHBoxLayout(self.frame_3)
         self.horizontalLayout_2.setObjectName(u"horizontalLayout_2")
         self.horizontalLayout_2.setContentsMargins(0, 5, 0, 5)
         self.addButton = QPushButton(self.frame_3)
         self.addButton.setObjectName(u"addButton")
-        sizePolicy = QSizePolicy(QSizePolicy.Minimum, QSizePolicy.Fixed)
+        sizePolicy = QSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Fixed)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.addButton.sizePolicy().hasHeightForWidth())
@@ -148,14 +158,18 @@ class Ui_MainWindow(object):
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QMenuBar(MainWindow)
         self.menubar.setObjectName(u"menubar")
-        self.menubar.setGeometry(QRect(0, 0, 541, 26))
-        font2 = QFont()
-        font2.setPointSize(11)
-        self.menubar.setFont(font2)
+        self.menubar.setGeometry(QRect(0, 0, 515, 25))
+        font3 = QFont()
+        font3.setPointSize(11)
+        self.menubar.setFont(font3)
         self.menuConfig = QMenu(self.menubar)
         self.menuConfig.setObjectName(u"menuConfig")
         self.menuAbout = QMenu(self.menubar)
         self.menuAbout.setObjectName(u"menuAbout")
+        font4 = QFont()
+        font4.setFamilies([u"Microsoft YaHei UI"])
+        font4.setPointSize(9)
+        self.menuAbout.setFont(font4)
         MainWindow.setMenuBar(self.menubar)
 
         self.menubar.addAction(self.menuConfig.menuAction())
