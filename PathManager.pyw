@@ -26,10 +26,13 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 FILEPATH = os.path.join(BASE_DIR, 'data.json')
 CONFIG_FILE = os.path.join(BASE_DIR, 'config.json')
 
-# 系统暂时不区分太细，后续有需要再编写详细的代码
-# 现在主要是为了在选择 sublime text 程序时可以在 macOS 上或者 Linux 上使用。
-OS = 'Windows' if os.name == 'nt' else 'Others'
-
+if os.name == 'nt':
+    OS = 'Windows'
+elif os.name == 'posix':
+    OS = 'MacOS'
+else:
+    # 暂且如此吧，代码中目前没有涉及到。
+    OS = 'Linux'
 
 class ConfigForm(QWidget):
 
@@ -59,7 +62,7 @@ class ConfigForm(QWidget):
         self.ui.pushButtonCancel.clicked.connect(self.cancel)
 
     def choose_sublime_text(self):
-        help_text = 'Program (*.exe)' if OS == 'Windows' else 'Program'
+        help_text = 'Program (*.exe)' if OS == 'Windows' else 'All Files (*)'
         path, _ = QFileDialog.getOpenFileName(
             self,
             '选择Sublime Text程序',
@@ -306,9 +309,13 @@ class MainWindow(QMainWindow):
 
     def open_console_window(self):
         directory = self._get_selected_directory()
-        if directory:
+        if not directory:
+            return
+        if OS == 'Windows':
             command = f'start /D "{directory}"'
             os.system(command)
+        elif OS == 'MacOS':
+            subprocess.Popen(['open', '-a', 'Terminal', directory])
 
     def open_with_sublime(self, flag):
         assert flag in ('file', 'path'), 'flag 必须为 file 或者 path'
@@ -341,7 +348,11 @@ class MainWindow(QMainWindow):
             target = self._get_selected_directory()
             if not target:
                 return
-        subprocess.Popen([sublime_text_path, target])
+        if OS == 'MacOS':
+            sublime_text_path = os.path.join(sublime_text_path, r'Contents/SharedSupport/bin/subl')
+            subprocess.Popen([sublime_text_path, target])
+        else:
+            subprocess.Popen([sublime_text_path, target])
 
     def open_selected_file(self):
         path = self._get_selected_path()
@@ -353,14 +364,27 @@ class MainWindow(QMainWindow):
             if OS == 'Windows':
                 subprocess.Popen(['explorer.exe', path])
         elif self._check_path_exists(path):
-            # 运行时切换到目标路径下。
-            # 曾经出现过目标程序读取配置文件时使用 config.json
-            # 的配置文件，但是却错误地读取到该程序下的配置文件导致
-            # 程序崩溃。添加部分代码来规避这种情况的出现。
-            directory_path = os.path.dirname(path)
-            os.chdir(directory_path)
-            os.startfile(path)
-            os.chdir(BASE_DIR)
+            if OS == 'Windows':
+                # 运行时切换到目标路径下。
+                # 曾经出现过目标程序读取配置文件时使用 config.json
+                # 的配置文件，但是却错误地读取到该程序下的配置文件导致
+                # 程序崩溃。添加部分代码来规避这种情况的出现。
+                directory_path = os.path.dirname(path)
+                os.chdir(directory_path)
+                os.startfile(path)
+                os.chdir(BASE_DIR)
+            elif OS == 'MacOS':
+                if os.path.isdir(path):
+                    subprocess.Popen(['open', path])
+                else:
+                    if path.endswith(('.py', '.pyw')):
+                        command = f"""
+osascript -e 'tell application "Terminal"
+    do script "python3 {path};"
+    activate
+end tell'
+"""
+                        subprocess.run(command, shell=True)
 
     def open_selected_directory(self):
         """
@@ -370,16 +394,18 @@ class MainWindow(QMainWindow):
         path = self._get_selected_path()
         if not path:
             return
-        if os.path.isdir(path):
-            os.startfile(path)
-        elif os.path.isfile(path):
+        if OS == 'Windows':
             path = path.replace('/', '\\')
-            directory = os.path.dirname(path)
-            subprocess.Popen(rf'explorer /select,"{path}"')
-        else:
-            QMessageBox.about(self,
-                              '提示',
-                              '该路径不是文件或者文件夹，无法使用此方式打开。')
+            if os.path.isfile:
+                directory = os.path.dirname(path)
+            else:
+                directory = path
+            subprocess.Popen(rf'explorer /select,"{directory}"')
+        elif OS == 'MacOS':
+            if os.path.isfile:
+                subprocess.Popen(['open', '-R', path])
+            else:
+                subprocess.Popen(['open', path])
 
     def save(self, flash_flag=True):
         """
@@ -420,7 +446,7 @@ class MainWindow(QMainWindow):
 
     def update_config(self):
         self.config = ConfigStorage.from_json(CONFIG_FILE)
-        self.config.pretty_print()
+        # self.config.pretty_print()
 
     def _change_button_status(self, *, mode):
         assert mode in ('enabled', 'disabled')
@@ -534,7 +560,7 @@ class MainWindow(QMainWindow):
         menu.addAction(open_path_with_sublime)
         menu.addSeparator()
         menu.addAction(open_selected_file)
-        menu.exec_(self.ui.listWidget.mapToGlobal(position))
+        menu.exec(self.ui.listWidget.mapToGlobal(position))
 
     def _show_row_data(self, row):
         """Show one row data to input widgets.

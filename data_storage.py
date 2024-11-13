@@ -1,5 +1,6 @@
 import json
 import os
+import re
 
 
 class JsonDb(dict):
@@ -64,6 +65,7 @@ class DataStorage(JsonDb):
     def handle_drop_items(self, urlist):
         for QUrl in urlist:
             path = QUrl.toLocalFile()
+            path = re.sub(r'[/\\]$', '', path)
             filename = os.path.basename(path)
             datalist = {
                 'name': filename,
