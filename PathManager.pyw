@@ -396,13 +396,14 @@ end tell'
             return
         if OS == 'Windows':
             path = path.replace('/', '\\')
-            if os.path.isfile:
+            if os.path.isfile(path):
                 directory = os.path.dirname(path)
             else:
                 directory = path
-            subprocess.Popen(rf'explorer /select,"{directory}"')
+            os.startfile(directory)
+            # subprocess.Popen(rf'explorer /select,"{directory}"')
         elif OS == 'MacOS':
-            if os.path.isfile:
+            if os.path.isfile(path):
                 subprocess.Popen(['open', '-R', path])
             else:
                 subprocess.Popen(['open', path])
